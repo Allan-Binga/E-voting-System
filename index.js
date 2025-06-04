@@ -34,7 +34,7 @@ app.use(cors(corsOptions))
 app.use(cookieParser());
 
 //Route 
-app.use("/e-voting-system/v1/auth", authRoute)
+app.use("/e-voting-system/v1/auth/users", authRoute)
 
 // Start the server only if not in test environment
 if (process.env.NODE_ENV !== "test") {
