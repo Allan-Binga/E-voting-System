@@ -192,7 +192,7 @@ function VoterLogin() {
       setSuccess("Login successful.");
       toast.success("Login successful.");
       setTimeout(() => {
-        navigate("/home");
+        navigate("/voter/home");
       }, 4000);
     } catch (error) {
       console.error("[Form Error]", error);

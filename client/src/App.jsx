@@ -8,6 +8,7 @@ import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VoterRegister from "./pages/Register/VoterRegister";
 import VoterLogin from "./pages/Login/VoterLogin"
+import VoterHome from "./pages/Homes/VoterHome";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Navigate to="/voter/registration" />} />
         <Route path="/voter/registration" element={<VoterRegister />} />
         <Route path="/voter/login" element={<VoterLogin/>}/>
+        <Route path="/voter/home" element={<VoterHome/>}/>
       </Routes>
 
       {/* Global ToastContainer */}

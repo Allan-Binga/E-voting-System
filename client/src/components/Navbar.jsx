@@ -16,7 +16,7 @@ function Navbar() {
             Multimedia University
           </span>
           <span className="text-base text-gray-600 font-medium">
-            e-Voting System
+            e-Voting Management System
           </span>
         </div>
       </div>

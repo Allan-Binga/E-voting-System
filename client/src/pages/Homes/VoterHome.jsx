@@ -1,9 +1,9 @@
+import Sidebar from "../../components/Sidebar"
+
 function VoterHome () {
     return (
         <div>
-            <p>
-                Voter's Home
-            </p>
+           <Sidebar/>
         </div>
     )
 }

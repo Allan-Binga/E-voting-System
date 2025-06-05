@@ -1,5 +1,6 @@
 const client = require("../config/db");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 function euclideanDistance(arr1, arr2) {
   if (arr1.length !== arr2.length) return Infinity;
@@ -147,7 +148,7 @@ const loginVoter = async (req, res) => {
       message: "Login successful",
       voter: {
         id: user.user_id,
-      }
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -155,4 +156,161 @@ const loginVoter = async (req, res) => {
   }
 };
 
-module.exports = { registerVoter, loginVoter };
+//Logout Voter
+const logoutVoter = async (req, res) => {
+  try {
+    if (!req.cookies?.adminVotingSession) {
+      return res.status(409).json({ message: "You are not logged in." });
+    }
+    res.clearCookie("userVotingSession");
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Voter logout Error:", error);
+    res.status(500).json({ message: "Error occurred during logout." });
+  }
+};
+
+// Register Administrator
+const registerAdmin = async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  // Verify required fields
+  if (!firstName || !lastName || !email || !password) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  // Email Format Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format." });
+  }
+
+  // Password Strength Validation
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.",
+    });
+  }
+
+  try {
+    // Check if admin already exists
+    const checkAdminQuery = `SELECT * FROM admins WHERE email = $1`;
+    const existingAdmin = await client.query(checkAdminQuery, [email]);
+
+    if (existingAdmin.rows.length > 0) {
+      return res.status(409).json({ message: "Email already registered." });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new admin
+    const insertQuery = `
+      INSERT INTO admins (first_name, last_name, email, password)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, first_name, last_name, email;
+    `;
+
+    const result = await client.query(insertQuery, [
+      firstName,
+      lastName,
+      email,
+      hashedPassword,
+    ]);
+
+    res.status(201).json({
+      message: "Administrator registered successfully.",
+      admin: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Admin Registration Error:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+//Login Administrator
+const loginAdmin = async (req, res) => { 
+  const { email, password } = req.body;
+
+  if (req.cookies?.adminVotingSession) {
+    return res.status(400).json({ message: "You are already logged in." });
+  }
+  try {
+    //Check if Admin exists
+    const checkAdminQuery = "SELECT * FROM admins WHERE email = $1";
+    const admin = await client.query(checkAdminQuery, [email]);
+
+    if (admin.rows.length === 0) {
+      return res
+        .status(401)
+        .json({ message: "Invalid credentials. Please try again." });
+    }
+
+    //Verify Password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      admin.rows[0].password
+    );
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    //Create JWT
+    const adminToken = jwt.sign(
+      {
+        id: admin.rows[0].id,
+        role: "Administrator",
+        email: admin.rows[0].email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    //Set Cookie
+    res.cookie("adminVotingSession", adminToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      admin: {
+        id: admin.rows[0].id,
+        email: admin.rows[0].email,
+      },
+    });
+  } catch (error) {
+    console.error("Admin login error", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+// Admin Logout
+const logoutAdmin = async (req, res) => {
+  try {
+    if (!req.cookies?.adminVotingSession) {
+      return res.status(400).json({ message: "You are not logged in." });
+    }
+
+    res.clearCookie("adminVotingSession");
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Admin Logout Error:", error);
+    res.status(500).json({ message: "Error occurred during logout." });
+  }
+};
+
+module.exports = {
+  registerVoter,
+  loginVoter,
+  registerAdmin,
+  loginAdmin,
+  logoutVoter,
+  logoutAdmin,
+};
