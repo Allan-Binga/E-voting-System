@@ -7,44 +7,21 @@ import { toast } from "react-toastify";
 import { endpoint } from "../../endpoint";
 import * as faceapi from "face-api.js";
 
-function VoterRegister() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    biometricData: "",
-    faculty: "",
-  });
+function LoginCandidate() {
+  const [formData, setFormData] = useState({ email: "", biometricData: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isScanning, setIsScanning] = useState(false); // Track scanning state
   const navigate = useNavigate();
   const videoRef = useRef();
-  const streamRef = useRef(null);
+  const streamRef = useRef(null); // Store the stream to stop it later
   const canvasRef = useRef(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (
-      (name === "firstName" || name === "lastName") &&
-      /[^a-zA-Z\s]/.test(value)
-    ) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [name]: "Only valid names are allowed.",
-      }));
-    } else {
-      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // Load Face-API models
   useEffect(() => {
     const loadModels = async () => {
       const MODEL_URI = "/models";
@@ -58,6 +35,7 @@ function VoterRegister() {
     loadModels();
   }, []);
 
+  // Clean up stream on component unmount
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -66,6 +44,26 @@ function VoterRegister() {
     };
   }, []);
 
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Validate email
+    if (name === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      if (!emailRegex.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          email: "Please enter a valid email address.",
+        }));
+      } else {
+        setFieldErrors((prev) => ({ ...prev, email: "" }));
+      }
+    }
+  };
+
+  // Face Scan Function
   const scanFace = async () => {
     setError("");
     setIsScanning(true);
@@ -90,6 +88,7 @@ function VoterRegister() {
         console.log("[Scan] Video metadata loaded, waiting for 3 seconds");
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
+        // Capture image from video
         const canvas = canvasRef.current;
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
@@ -107,6 +106,7 @@ function VoterRegister() {
 
         console.log("[Scan] Face detection result:", detection);
 
+        // Stop stream
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop());
           streamRef.current = null;
@@ -115,7 +115,6 @@ function VoterRegister() {
 
         if (!detection) {
           console.log("[Scan] No face detected");
-          setCapturedImage(null);
           return toast.info("No face detected. Please try again.");
         }
 
@@ -140,39 +139,97 @@ function VoterRegister() {
     }
   };
 
-  const faculties = [
-    "Business & Economics",
-    "Engineering & Technology",
-    "Science & Technology",
-    "Computing & Information Technology",
-    "Social Sciences & Technology",
-    "Media & Communication",
-  ];
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    // Validate form
+    const newErrors = {};
+    if (!formData.email) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (!formData.biometricData) {
+      newErrors.biometricData = "Please scan your face before logging in.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      console.log("[Form] Validation errors:", newErrors);
+      setFieldErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${endpoint}/candidates/auth/candidate-login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setFieldErrors({});
+        if (data.message?.toLowerCase().includes("email")) {
+          setFieldErrors({ email: data.message });
+        } else if (data.message?.toLowerCase().includes("biometric")) {
+          setFieldErrors({ biometricData: data.message });
+        } else {
+          setError(data.message || "Login failed. Please try again.");
+        }
+        return;
+      }
+
+      localStorage.setItem("userId", data.voter.id);
+      setSuccess("Login successful.");
+      toast.success("Login successful.");
+      setTimeout(() => {
+        navigate("/voter/home");
+      }, 4000);
+    } catch (error) {
+      console.error("[Form Error]", error);
+      const errorMessage = error.message?.toLowerCase?.();
+
+      if (errorMessage?.includes("already logged in")) {
+        toast.info("You are already logged in.", {
+          className:
+            "bg-blue-100 text-blue-800 font-medium rounded-md p-3 shadow",
+        });
+        navigate("/home");
+      } else {
+        setError(error.message || "Something went wrong.");
+        toast.error(error.message || "Something went wrong.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
-        {/* Left side - Image */}
-        {/* <div className="w-full lg:w-1/2 h-64 lg:h-screen bg-white">
-          <img src={HomeImage} alt="Home Image" className="w-400px h-400px " />
-        </div> */}
-
-        {/* Right side - Form */}
-        <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
               <Spinner />
             </div>
           )}
-
           <div className="text-center space-y-2">
             <ScanFace className="mx-auto text-blue-600" size={48} />
             <h2 className="text-2xl font-bold text-gray-800">
-              Voter Registration
+              Candidate Login
             </h2>
             <p className="text-sm text-gray-500">
-              Register to vote using biometric verification
+              Log in using your email and biometric verification
             </p>
           </div>
 
@@ -183,109 +240,9 @@ function VoterRegister() {
             <p className="text-green-600 text-sm text-center mt-4">{success}</p>
           )}
 
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setError("");
-              setSuccess("");
-              setLoading(true);
-              console.log("[Form] Submitting form data:", formData);
-
-              const newErrors = {};
-              if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
-                newErrors.firstName = "First name must contain only letters.";
-              }
-              if (!formData.biometricData) {
-                newErrors.biometricData =
-                  "Please scan your face before submitting.";
-              }
-
-              if (Object.keys(newErrors).length > 0) {
-                console.log("[Form] Validation errors:", newErrors);
-                setFieldErrors(newErrors);
-                setLoading(false);
-                return;
-              }
-
-              try {
-                const res = await fetch(
-                  `${endpoint}/auth/users/voter/register-voter`,
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
-                  }
-                );
-
-                const data = await res.json();
-                console.log("[Form] Server response:", data);
-
-                if (!res.ok) {
-                  setFieldErrors({});
-                  if (data.message?.toLowerCase().includes("first name")) {
-                    setFieldErrors({ firstName: data.message });
-                  } else if (
-                    data.message?.toLowerCase().includes("biometric")
-                  ) {
-                    setFieldErrors({ biometricData: data.message });
-                  } else {
-                    toast.error(data.message || "Something went wrong.");
-                  }
-                  return;
-                }
-
-                setFieldErrors({});
-                toast.success(data.message);
-                setTimeout(() => navigate("/voter/login"), 4000);
-              } catch (error) {
-                console.error("[Form Error]", error);
-                toast.error("Server error. Please try again.");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            className="mt-6 space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="John"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.firstName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.firstName}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Doe"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.lastName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.lastName}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-md font-medium text-gray-700">
                 Email
               </label>
               <input
@@ -298,31 +255,6 @@ function VoterRegister() {
               />
               {fieldErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Faculty
-              </label>
-              <select
-                name="faculty"
-                value={formData.faculty}
-                onChange={handleChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="" className="text-gray-800">
-                  -- Select Faculty --
-                </option>
-                {faculties.map((faculty) => (
-                  <option key={faculty} value={faculty}>
-                    {faculty}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.faculty && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.faculty}
-                </p>
               )}
             </div>
 
@@ -370,7 +302,7 @@ function VoterRegister() {
                 className="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition cursor-pointer mt-4"
               >
                 <ScanFace className="mr-2" size={20} />
-                {capturedImage ? "Rescan Face" : "Scan Face"}
+                Scan Face
               </button>
               {fieldErrors.biometricData && (
                 <p className="text-red-500 text-xs mt-2">
@@ -378,7 +310,7 @@ function VoterRegister() {
                 </p>
               )}
               <p className="mt-2 text-sm text-gray-500">
-                Facial scan required for final registration
+                Facial scan required for login
               </p>
             </div>
 
@@ -390,26 +322,18 @@ function VoterRegister() {
                 } flex items-center justify-center`}
                 disabled={loading}
               >
-                Complete Registration
+                Log In
               </button>
             </div>
           </form>
+
           <p className="text-center text-sm text-gray-500 mt-4">
-            Already have an account?{" "}
-            <Link
-              to="/voter/login"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Login Here
-            </Link>
-          </p>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Potential candidate?{" "}
+            Don't have an account?{" "}
             <Link
               to="/candidate/registration"
               className="text-blue-600 hover:underline font-medium"
             >
-              Click here
+              Register here
             </Link>
           </p>
         </div>
@@ -419,4 +343,4 @@ function VoterRegister() {
   );
 }
 
-export default VoterRegister;
+export default LoginCandidate;

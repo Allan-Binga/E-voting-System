@@ -38,4 +38,22 @@ const authAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { authUser, authAdmin };
+//Candiate
+const authCandidate = (req, res, next) => {
+  try {
+    const token = req.cookies.candidateVotingSession;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized. Please login as a candidate." });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.candidateId = decoded.id;
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: "Invalid or expired admin token." });
+  }
+};
+
+module.exports = { authUser, authAdmin, authCandidate };

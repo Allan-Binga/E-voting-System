@@ -1,8 +1,12 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const cors = require("cors")
-const authRoute = require("./routes/auth")
-const cookieParser = require("cookie-parser")
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const authRoute = require("./routes/auth");
+const electionRoute = require("./routes/election");
+const candidateRoute = require("./routes/candidates");
+const facultyRoute = require("./routes/faculty");
+const positionsRoute = require("./routes/positions");
 
 //Import PG
 require("./config/db");
@@ -28,13 +32,17 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 
 //Cookie Parser
 app.use(cookieParser());
 
-//Route 
-app.use("/e-voting-system/v1/auth/users", authRoute)
+//Route
+app.use("/e-voting-system/v1/auth/users", authRoute);
+app.use("/e-voting-system/v1/election", electionRoute);
+app.use("/e-voting-system/v1/candidates", candidateRoute);
+app.use("/e-voting-system/v1/faculty", facultyRoute);
+app.use("/e-voting-system/v1/position", positionsRoute);
 
 // Start the server only if not in test environment
 if (process.env.NODE_ENV !== "test") {

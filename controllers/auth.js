@@ -13,29 +13,23 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
-//Register Voter
 const registerVoter = async (req, res) => {
-  const { firstName, lastName, email, biometricData } = req.body;
+  const { firstName, lastName, email, faculty, biometricData } = req.body;
 
-  // Convert to Buffer (Float32 to bytes)
-  const buffer = Buffer.from(new Float32Array(biometricData).buffer);
-
-  //Verify Required Fields
-  if (!firstName || !lastName || !email || !biometricData) {
+  if (!firstName || !lastName || !email || !faculty || !biometricData) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
-  // Define regex patterns
-  const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/; // At least 3 characters, letters, apostrophes, hyphens
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/; // Basic email structure
+  const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-  // Validate name format
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
       message:
         "First name must be at least 3 characters and contain only valid characters.",
     });
   }
+
   if (!nameRegex.test(lastName)) {
     return res.status(400).json({
       message:
@@ -43,41 +37,107 @@ const registerVoter = async (req, res) => {
     });
   }
 
-  // Validate email format
   if (!emailRegex.test(email)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
+  // Map faculties to codes
+  const facultyCodes = {
+    "Business & Economics": "BUS",
+    "Engineering & Technology": "ENG",
+    "Science & Technology": "SCT",
+    "Computing & Information Technology": "CIT",
+    "Social Sciences & Technology": "SST",
+    "Media & Communication": "MCS",
+  };
+
+  const facultyCode = facultyCodes[faculty];
+  if (!facultyCode) {
+    return res.status(400).json({ message: "Invalid faculty selection." });
+  }
+
   try {
-    //Check if user already exists
     const checkUserQuery = "SELECT * FROM users WHERE email = $1";
     const existingUser = await client.query(checkUserQuery, [email]);
 
     if (existingUser.rows.length > 0) {
-      return res.status(409).json({
-        message: "User already exists.",
-      });
+      return res.status(409).json({ message: "User already exists." });
     }
 
-    //Insert User
-    const insertUserQuery = `INSERT INTO users(first_name, last_name, email, biometric_data, status) values ($1, $2, $3, $4, $5) RETURNING user_id, first_name, last_name, email, biometric_data, status`;
+    // Biometric similarity check
+    const getBiometricsQuery =
+      "SELECT biometric_data FROM users WHERE biometric_data IS NOT NULL";
+    const result = await client.query(getBiometricsQuery);
+    const existingBiometrics = result.rows;
 
-    const newUser = await client.query(insertUserQuery, [
+    const threshold = 0.4;
+    const newEmbedding = new Float32Array(biometricData);
+
+    for (const row of existingBiometrics) {
+      const storedBuffer = row.biometric_data;
+      const storedEmbedding = new Float32Array(
+        storedBuffer.buffer,
+        storedBuffer.byteOffset,
+        storedBuffer.length / Float32Array.BYTES_PER_ELEMENT
+      );
+
+      const similarity = cosineSimilarity(newEmbedding, storedEmbedding);
+      if (similarity > threshold) {
+        return res.status(409).json({
+          message: "Biometric data already registered with another user.",
+        });
+      }
+    }
+
+    const buffer = Buffer.from(newEmbedding.buffer);
+
+    // Insert user (without registration number for now)
+    const insertUserQuery = `
+      INSERT INTO users (first_name, last_name, email, faculty, biometric_data, status)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING user_id
+    `;
+    const insertResult = await client.query(insertUserQuery, [
       firstName,
       lastName,
       email,
+      faculty,
       buffer,
       "Active",
     ]);
 
-    // const userId = newUser.rows[0].user_id
+    const userId = insertResult.rows[0].user_id;
+    const registrationNumber = `${facultyCode}-${userId}-2025`;
 
-    res.status(201).json({ message: "Successful registration" });
+    // Update registration number
+    const updateQuery = `UPDATE users SET registration_number = $1 WHERE user_id = $2`;
+    await client.query(updateQuery, [registrationNumber, userId]);
+
+    res
+      .status(201)
+      .json({ message: "Successful registration", registrationNumber });
   } catch (error) {
     console.error("User registration error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// Cosine similarity helper
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length) return 0;
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
 // Login Voter
 const loginVoter = async (req, res) => {
@@ -178,7 +238,21 @@ const registerAdmin = async (req, res) => {
   if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
+  const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
 
+  if (!nameRegex.test(firstName)) {
+    return res.status(400).json({
+      message:
+        "First name must be at least 3 characters and contain only valid characters.",
+    });
+  }
+
+  if (!nameRegex.test(lastName)) {
+    return res.status(400).json({
+      message:
+        "Last name must be at least 3 characters and contain only valid characters.",
+    });
+  }
   // Email Format Validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -232,7 +306,7 @@ const registerAdmin = async (req, res) => {
 };
 
 //Login Administrator
-const loginAdmin = async (req, res) => { 
+const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
 
   if (req.cookies?.adminVotingSession) {
