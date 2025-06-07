@@ -7,6 +7,7 @@ const electionRoute = require("./routes/election");
 const candidateRoute = require("./routes/candidates");
 const facultyRoute = require("./routes/faculty");
 const positionsRoute = require("./routes/positions");
+const verificationRoute = require("./routes/verify");
 
 //Import PG
 require("./config/db");
@@ -39,6 +40,7 @@ app.use(cookieParser());
 
 //Route
 app.use("/e-voting-system/v1/auth/users", authRoute);
+app.use("/e-voting-system/v1/auth/verification", verificationRoute);
 app.use("/e-voting-system/v1/election", electionRoute);
 app.use("/e-voting-system/v1/candidates", candidateRoute);
 app.use("/e-voting-system/v1/faculty", facultyRoute);

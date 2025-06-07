@@ -1,6 +1,8 @@
 const client = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const { sendOTPEmail } = require("./emailService");
 
 function euclideanDistance(arr1, arr2) {
   if (arr1.length !== arr2.length) return Infinity;
@@ -13,6 +15,7 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
+//Register Voter
 const registerVoter = async (req, res) => {
   const { firstName, lastName, email, faculty, biometricData } = req.body;
 
@@ -216,10 +219,50 @@ const loginVoter = async (req, res) => {
   }
 };
 
+//Login Voter with OTP
+const loginWithOTP = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ message: "Email is required." });
+
+  try {
+    //Check if user exists
+    const userResult = await client.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const user = userResult.rows[0];
+
+    //Generate 6-Digit OTP
+    const otp = Math.floor(100000 + Math.random() * 90000).toString();
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    // Insert OTP into Database
+    await client.query(
+      `INSERT INTO otps (user_id, otp_code, expires_at, verified) VALUES ($1, $2, $3, $4)`,
+      [user.user_id, otp, expiresAt, "false"]
+    );
+
+    //Send OTP
+    await sendOTPEmail(email, otp);
+
+    return res.status(200).json({ message: "OTP sent to email." });
+  } catch (error) {
+    console.error("OTP Login Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 //Logout Voter
 const logoutVoter = async (req, res) => {
   try {
-    if (!req.cookies?.adminVotingSession) {
+    if (!req.cookies?.userVotingSession) {
       return res.status(409).json({ message: "You are not logged in." });
     }
     res.clearCookie("userVotingSession");
@@ -383,6 +426,7 @@ const logoutAdmin = async (req, res) => {
 module.exports = {
   registerVoter,
   loginVoter,
+  loginWithOTP,
   registerAdmin,
   loginAdmin,
   logoutVoter,

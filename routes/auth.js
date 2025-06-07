@@ -1,14 +1,23 @@
-const express = require("express")
-const {registerVoter, loginVoter, registerAdmin, loginAdmin, logoutVoter, logoutAdmin} = require("../controllers/auth")
+const express = require("express");
+const {
+  registerVoter,
+  loginVoter,
+  loginWithOTP,
+  registerAdmin,
+  loginAdmin,
+  logoutVoter,
+  logoutAdmin,
+} = require("../controllers/auth");
 
-const router = express.Router()
+const router = express.Router();
 
 //Routes
-router.post("/voter/register-voter", registerVoter)
-router.post("/voter/login-voter", loginVoter)
-router.post("/voter/logout-voter", logoutVoter)
-router.post("/administrator/register-admin", registerAdmin)
-router.post("/administrator/login-admin", loginAdmin)
-router.post("/administrator/logout-admin", logoutAdmin)
+router.post("/voter/register-voter", registerVoter);
+router.post("/voter/login-voter", loginVoter);
+router.post("/voter/otp-login", loginWithOTP);
+router.post("/voter/logout-voter", logoutVoter);
+router.post("/administrator/register-admin", registerAdmin);
+router.post("/administrator/login-admin", loginAdmin);
+router.post("/administrator/logout-admin", logoutAdmin);
 
-module.exports = router
+module.exports = router;

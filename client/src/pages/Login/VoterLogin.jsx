@@ -1,4 +1,4 @@
-import { Fingerprint, ScanFace } from "lucide-react";
+import { Fingerprint, ScanFace, ShieldIcon } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
 import { useState, useEffect, useRef } from "react";
@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { endpoint } from "../../endpoint";
 import * as faceapi from "face-api.js";
+import axios from "axios";
 
 function VoterLogin() {
   const [formData, setFormData] = useState({ email: "", biometricData: "" });
@@ -213,6 +214,41 @@ function VoterLogin() {
     }
   };
 
+  //Handle OTP email
+  const handleOTPEmail = async () => {
+    setError("");
+    setSuccess("");
+    setFieldErrors({});
+
+    if (!formData.email) {
+      setFieldErrors({ email: "Email is required for OTP login." });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${endpoint}/auth/users/voter/otp-login`,
+        {
+          email: formData.email,
+        }
+      );
+
+      toast.success("Please check your email for an OTP verification code.");
+      setTimeout(() => {
+        navigate("/user/verify-email");
+      }, 5000);
+      console.log("[OTP] Response:", response.data);
+    } catch (error) {
+      console.error("[OTP Error]", error);
+      toast.info(
+        error.response?.data?.message || "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -293,7 +329,6 @@ function VoterLogin() {
                   />
                 </div>
               )}
-
               <button
                 type="button"
                 onClick={scanFace}
@@ -302,6 +337,7 @@ function VoterLogin() {
                 <ScanFace className="mr-2" size={20} />
                 Scan Face
               </button>
+
               {fieldErrors.biometricData && (
                 <p className="text-red-500 text-xs mt-2">
                   {fieldErrors.biometricData}
@@ -312,7 +348,7 @@ function VoterLogin() {
               </p>
             </div>
 
-            <div>
+            <div className="flex flex-col items-center gap-4">
               <button
                 type="submit"
                 className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
@@ -321,6 +357,22 @@ function VoterLogin() {
                 disabled={loading}
               >
                 Log In
+              </button>
+              <span className="text-md text-gray-500">Or</span>
+              <button
+                type="button"
+                onClick={handleOTPEmail}
+                className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-full shadow hover:bg-green-700 focus:outline-none cursor-pointer"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner className="w-5 h-5" />
+                ) : (
+                  <>
+                    <ShieldIcon className="mr-2 w-5 h-5" />
+                    Login with OTP
+                  </>
+                )}
               </button>
             </div>
           </form>

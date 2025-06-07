@@ -2,13 +2,16 @@ import { Vote, ScrollText, User, LogOut } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../endpoint";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar() {
+  const navigate = useNavigate()
+  
   // Handle Logout
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        `${endpoint}/auth/voter/logout-voter`,
+        `${endpoint}/auth/users/voter/logout-voter`,
         {},
         { withCredentials: true }
       );
@@ -58,7 +61,7 @@ function Sidebar() {
         </a>
         <a
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
         >
           <LogOut size={20} />
           <span>Logout</span>

@@ -403,7 +403,7 @@ function CandidateRegister() {
             </Link>
           </p>
           <p className="text-center text-sm text-gray-500 mt-4">
-            Candidate?
+            Are you a voter?
             <Link
               to="/candidate/registration"
               className="text-blue-600 hover:underline font-medium"
