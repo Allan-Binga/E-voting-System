@@ -52,7 +52,7 @@ const authCandidate = (req, res, next) => {
     req.candidateId = decoded.id;
     next();
   } catch (error) {
-    return res.status(403).json({ message: "Invalid or expired admin token." });
+    return res.status(403).json({ message: "Invalid or expired candidate token." });
   }
 };
 

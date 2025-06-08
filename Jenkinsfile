@@ -11,18 +11,18 @@ pipeline {
                 git 'https://github.com/Allan-Binga/E-voting-System'
             }
         }
-        stage('Install Dependencies') {
-            steps {
-                    sh 'npm install'
-            }
-        }
+        // stage('Install Dependencies') {
+        //     steps {
+        //             sh 'npm install'
+        //     }
+        // }
     }
     post {
         success {
             slackSend(
             channel: '#e-voting-system',
             color: 'good',
-            message: 'Successfully installed dependencies.'
+            message: 'Cloned repo successfully.'
         )
         }
         failure {
@@ -31,7 +31,7 @@ pipeline {
             channel: '#e-voting-system',
             color: 'danger',
             /* groovylint-disable-next-line DuplicateStringLiteral */
-            message: 'Successfully installed dependencies.'
+            message: 'Cloned repo successfully.'
         )
     }
     }

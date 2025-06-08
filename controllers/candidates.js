@@ -1,6 +1,7 @@
 const client = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { sendOTPEmail } = require("./emailService");
 
 function euclideanDistance(arr1, arr2) {
   if (arr1.length !== arr2.length) return Infinity;
@@ -13,6 +14,7 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
+//Register Candidate
 const registerCandidate = async (req, res) => {
   const { firstName, lastName, email, biometricData, faculty } = req.body;
 
@@ -179,6 +181,46 @@ const loginCandidate = async (req, res) => {
   }
 };
 
+//Login Candidate with OTP
+const loginWithOTP = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ message: "Email is required." });
+
+  try {
+    //Check if Candidate Exists
+    const candidateResult = await client.query(
+      "SELECT * FROM candidates WHERE email = $1",
+      [email]
+    );
+
+    if (candidateResult.rows.length === 0) {
+      return res.status(404).json({ message: "Candidate not found." });
+    }
+
+    const candidate = candidateResult.rows[0];
+
+    //Generate 6-Digit OTP
+    const otp = Math.floor(100000 + Math.random() * 90000).toString();
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    //Insert OTP into DB
+    await client.query(
+      `INSERT INTO otps(candidate_id, otp_code, expires_at, verified) VALUES ($1, $2, $3, $4)`,
+      [candidate.candidate_id, otp, expiresAt, "false"]
+    );
+
+    //Send OTP
+    await sendOTPEmail(email, otp);
+
+    res.status(200).json({ message: "OTP sent to email" });
+  } catch (error) {
+    console.error("OTP Login Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 //Update candidate
 const updateCandidate = async (req, res) => {
   try {
@@ -203,6 +245,7 @@ const applyPosition = async (req, res) => {
 module.exports = {
   registerCandidate,
   loginCandidate,
+  loginWithOTP,
   updateCandidate,
   deleteCandidate,
   applyPosition,
