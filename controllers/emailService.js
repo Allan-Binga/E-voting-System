@@ -154,15 +154,21 @@ const sendApprovalOrRejectionEmail = async (email, approval_status) => {
     html: `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f7fa; color: #333;">
         <!-- Header -->
-        <div style="background-color: ${isApproved ? "#34a853" : "#ea4335"}; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <div style="background-color: ${
+          isApproved ? "#34a853" : "#ea4335"
+        }; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
           <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Multimedia e-Voting System</h1>
         </div>
         <!-- Body -->
         <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="font-size: 20px; color: ${isApproved ? "#34a853" : "#ea4335"};">Hello Candidate,</h2>
+          <h2 style="font-size: 20px; color: ${
+            isApproved ? "#34a853" : "#ea4335"
+          };">Hello Candidate,</h2>
           ${messageBody}
           <div style="text-align: center; margin: 20px 0;">
-            <a href="#" style="background-color: ${isApproved ? "#34a853" : "#ea4335"}; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 16px; display: inline-block;">
+            <a href="#" style="background-color: ${
+              isApproved ? "#34a853" : "#ea4335"
+            }; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 16px; display: inline-block;">
               ${ctaText}
             </a>
           </div>
@@ -187,10 +193,16 @@ const sendApprovalOrRejectionEmail = async (email, approval_status) => {
   }
 };
 
+//Send Successful/Failure Vote email
+const sendVoteStatusEmail = async (email, voter_status) => {
+  try {
+  } catch (error) {}
+};
 
 module.exports = {
   sendOTPEmail,
   sendCandidateApplicationEmail,
   sendAdminApplicationApprovalEmail,
   sendApprovalOrRejectionEmail,
+  sendVoteStatusEmail,
 };

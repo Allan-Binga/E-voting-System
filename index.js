@@ -7,7 +7,11 @@ const electionRoute = require("./routes/election");
 const candidateRoute = require("./routes/candidates");
 const facultyRoute = require("./routes/faculty");
 const verificationRoute = require("./routes/verify");
-const applicationRoute = require("./routes/application")
+const applicationRoute = require("./routes/application");
+const voteRoute = require("./routes/vote");
+const ballotRoute = require("./routes/ballot");
+const positionsRoute = require("./routes/positions");
+const usersRoute = require("./routes/users");
 
 //Import PG
 require("./config/db");
@@ -44,7 +48,11 @@ app.use("/e-voting-system/v1/auth/verification", verificationRoute);
 app.use("/e-voting-system/v1/election", electionRoute);
 app.use("/e-voting-system/v1/candidates", candidateRoute);
 app.use("/e-voting-system/v1/faculty", facultyRoute);
-app.use("/e-voting-system/v1/applications", applicationRoute)
+app.use("/e-voting-system/v1/applications", applicationRoute);
+app.use("/e-voting-system/v1/vote", voteRoute);
+app.use("/e-voting-system/v1/ballot", ballotRoute);
+app.use("/e-voting-system/v1/position", positionsRoute);
+app.use("/e-voting-system/v1/users", usersRoute);
 
 // Start the server only if not in test environment
 if (process.env.NODE_ENV !== "test") {

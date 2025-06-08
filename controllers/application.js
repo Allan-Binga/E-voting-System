@@ -5,6 +5,23 @@ const {
   sendApprovalOrRejectionEmail,
 } = require("./emailService");
 
+// Get Applications
+const getApplications = async (req, res) => {
+  try {
+    // Applications Query
+    const applicationQuery = "SELECT * FROM applications";
+    const applicationResult = await client.query(applicationQuery);
+
+    return res.status(200).json({
+      message: "Applications retrieved successfully.",
+      applications: applicationResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 //Apply as a delegate
 const applyDelegates = async (req, res) => {
   const candidateId = req.candidateId;
@@ -311,13 +328,62 @@ const approveApplication = async (req, res) => {
   }
 };
 
-//Reject an Application
+// Reject an Application
 const rejectApplication = async (req, res) => {
+  const { candidateId } = req.body;
+
   try {
-  } catch (error) {}
+    // 1. Find candidate application
+    const applicationQuery = `
+      SELECT * FROM applications WHERE candidate_id = $1
+    `;
+    const applicationResult = await client.query(applicationQuery, [
+      candidateId,
+    ]);
+
+    if (applicationResult.rows.length === 0) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    const application = applicationResult.rows[0];
+
+    // 2. Check if already rejected
+    if (application.approval_status === "Rejected") {
+      return res.status(400).json({ message: "Candidate already rejected" });
+    }
+
+    // 3. Reject the application
+    const rejectQuery = `
+      UPDATE applications SET approval_status = 'Rejected' WHERE candidate_id = $1
+    `;
+    await client.query(rejectQuery, [candidateId]);
+
+    // 4. Fetch candidate's email
+    const emailQuery = `
+      SELECT email FROM candidates WHERE candidate_id = $1
+    `;
+    const emailResult = await client.query(emailQuery, [candidateId]);
+
+    if (emailResult.rows.length === 0) {
+      return res.status(404).json({ message: "Candidate email not found" });
+    }
+
+    const email = emailResult.rows[0].email;
+
+    // 5. Send rejection email
+    await sendApprovalOrRejectionEmail(email, "Rejected");
+
+    return res.status(200).json({
+      message: "Candidate rejected and email sent successfully.",
+    });
+  } catch (error) {
+    console.error("Rejection error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 module.exports = {
+  getApplications,
   applyDelegates,
   applyExecutive,
   approveApplication,

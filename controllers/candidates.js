@@ -14,6 +14,23 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
+//Get All Candidates
+const getCandidates = async (req, res) => {
+  try {
+    //Candidates
+    const candidateQuery = "SELECT * FROM candidates";
+    const candidateResult = await client.query(candidateQuery);
+
+    return res.status(200).json({
+      message: "Candidates retrieved.",
+      candidates: candidateResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 //Register Candidate
 const registerCandidate = async (req, res) => {
   const { firstName, lastName, email, biometricData, faculty } = req.body;
@@ -221,32 +238,95 @@ const loginWithOTP = async (req, res) => {
   }
 };
 
-//Update candidate
+// Update Candidate
 const updateCandidate = async (req, res) => {
+  const { candidateId } = req.params;
+  const { first_name, last_name, faculty, registration_number } = req.body;
+
   try {
-  } catch (error) {}
+    // Collect only provided fields
+    const fields = [];
+    const values = [];
+    let index = 1;
+
+    if (first_name) {
+      fields.push(`first_name = $${index++}`);
+      values.push(first_name);
+    }
+    if (last_name) {
+      fields.push(`last_name = $${index++}`);
+      values.push(last_name);
+    }
+    if (faculty) {
+      fields.push(`faculty = $${index++}`);
+      values.push(faculty);
+    }
+    if (registration_number) {
+      fields.push(`registration_number = $${index++}`);
+      values.push(registration_number);
+    }
+
+    if (fields.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No fields provided for update." });
+    }
+
+    // Add candidateId as the last value
+    values.push(candidateId);
+
+    const updateQuery = `
+      UPDATE candidates
+      SET ${fields.join(", ")}
+      WHERE candidate_id = $${values.length}
+      RETURNING *
+    `;
+
+    const result = await client.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Candidate not found." });
+    }
+
+    res.status(200).json({
+      message: "Candidate updated successfully.",
+      candidate: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error updating candidate:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
 };
 
-//Delete Candidate
+// Delete Candidate
 const deleteCandidate = async (req, res) => {
-  try {
-  } catch (error) {}
-};
+  const { candidateId } = req.params;
 
-//Apply for a position -Delegates or Executive
-const applyPosition = async (req, res) => {
-  const candidateId = req.candidateId;
-
-  const { positionContested, manifesto, facultyRepresented } = req.body;
   try {
-  } catch (error) {}
+    // Check if candidate exists
+    const checkQuery = "SELECT * FROM candidates WHERE candidate_id = $1";
+    const checkResult = await client.query(checkQuery, [candidateId]);
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: "Candidate not found." });
+    }
+
+    // Delete candidate
+    const deleteQuery = "DELETE FROM candidates WHERE candidate_id = $1";
+    await client.query(deleteQuery, [candidateId]);
+
+    return res.status(200).json({ message: "Candidate deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
 };
 
 module.exports = {
+  getCandidates,
   registerCandidate,
   loginCandidate,
   loginWithOTP,
   updateCandidate,
   deleteCandidate,
-  applyPosition,
 };
