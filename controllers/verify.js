@@ -146,7 +146,9 @@ const verifyCandidateOTP = async (req, res) => {
     const otpResult = await client.query(otpQuery, [otp]);
 
     if (otpResult.rows.length === 0) {
-      return res.status(404).json({ message: "Invalid OTP" });
+      return res
+        .status(404)
+        .json({ message: "Invalid OTP. Please try again." });
     }
 
     const otpRecord = otpResult.rows[0];

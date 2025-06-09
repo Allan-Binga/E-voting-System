@@ -245,42 +245,44 @@ function CandidateRegister() {
             }}
             className="mt-6 space-y-5"
           >
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="John"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.firstName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.firstName}
-                </p>
-              )}
-            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="John"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {fieldErrors.firstName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.firstName}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Doe"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.lastName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.lastName}
-                </p>
-              )}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {fieldErrors.lastName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.lastName}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -396,7 +398,7 @@ function CandidateRegister() {
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{" "}
             <Link
-              to="/voter/login"
+              to="/candidate/login"
               className="text-blue-600 hover:underline font-medium"
             >
               Login Here
@@ -405,7 +407,7 @@ function CandidateRegister() {
           <p className="text-center text-sm text-gray-500 mt-4">
             Are you a voter?
             <Link
-              to="/candidate/registration"
+              to="/voter/registration"
               className="text-blue-600 hover:underline font-medium"
             >
               Click here

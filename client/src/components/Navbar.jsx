@@ -4,9 +4,15 @@ import { useLocation } from "react-router-dom";
 
 function Navbar() {
   const location = useLocation();
-  const isOfficialsPage =
-    location.pathname === "/officials/registration" ||
-    location.pathname === "/officials/login";
+
+  const showElectionOfficialsLink = [
+    "/voter/registration",
+    "/voter/login",
+    "/candidate/registration",
+    "/candidate/login",
+    "/officials/registration",
+    "/officials/login",
+  ].includes(location.pathname);
 
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm h-20">
@@ -28,12 +34,12 @@ function Navbar() {
       </div>
 
       {/* Right Side: Icon and Conditional Link */}
-      <div className="flex items-center space-x-3 text-blue-600">
+      <div className="flex items-center space-x-3 text-green-600 hover:text-green-800">
         <Vote size={36} />
-        {!isOfficialsPage && (
+        {showElectionOfficialsLink && (
           <a
             href="/officials/registration"
-            className="text-sm font-medium text-blue hover:text-gray-800 transition"
+            className="text-md font-medium"
           >
             Election Officials
           </a>

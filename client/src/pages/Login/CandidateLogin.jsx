@@ -1,4 +1,4 @@
-import { Fingerprint, ScanFace } from "lucide-react";
+import { Fingerprint, ScanFace, ShieldIcon } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
 import { useState, useEffect, useRef } from "react";
@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { endpoint } from "../../endpoint";
 import * as faceapi from "face-api.js";
+import axios from "axios";
 
 function LoginCandidate() {
   const [formData, setFormData] = useState({ email: "", biometricData: "" });
@@ -63,82 +64,6 @@ function LoginCandidate() {
     }
   };
 
-  // Face Scan Function
-  const scanFace = async () => {
-    setError("");
-    setIsScanning(true);
-    setCapturedImage(null);
-    console.log("[Scan] Starting face scan...");
-
-    if (!modelsLoaded) {
-      setIsScanning(false);
-      console.log("[Scan] Models not loaded yet");
-      return toast.info("Face recognition models are loading...");
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720, facingMode: "user" },
-      });
-      streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      console.log("[Scan] Webcam stream started");
-
-      videoRef.current.onloadedmetadata = async () => {
-        console.log("[Scan] Video metadata loaded, waiting for 3 seconds");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        // Capture image from video
-        const canvas = canvasRef.current;
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const imageDataUrl = canvas.toDataURL("image/jpeg");
-
-        const detection = await faceapi
-          .detectSingleFace(
-            videoRef.current,
-            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
-          )
-          .withFaceLandmarks()
-          .withFaceDescriptor();
-
-        console.log("[Scan] Face detection result:", detection);
-
-        // Stop stream
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((track) => track.stop());
-          streamRef.current = null;
-        }
-        setIsScanning(false);
-
-        if (!detection) {
-          console.log("[Scan] No face detected");
-          return toast.info("No face detected. Please try again.");
-        }
-
-        const descriptorArray = Array.from(detection.descriptor);
-        console.log("[Scan] Descriptor array:", descriptorArray);
-        setFormData((prev) => ({
-          ...prev,
-          biometricData: descriptorArray,
-        }));
-        setCapturedImage(imageDataUrl);
-        toast.success("Face scanning successful.");
-      };
-    } catch (error) {
-      console.error("[Scan Error]", error);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-      setIsScanning(false);
-      setCapturedImage(null);
-      toast.error("Error accessing webcam or detecting face.");
-    }
-  };
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,14 +90,17 @@ function LoginCandidate() {
     }
 
     try {
-      const response = await fetch(`${endpoint}/candidates/auth/candidate-login`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${endpoint}/candidates/auth/candidate-login`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await response.json();
 
@@ -213,6 +141,41 @@ function LoginCandidate() {
     }
   };
 
+  //Handle OTP
+  const handleOTP = async () => {
+    setError("");
+    setSuccess("");
+    setFieldErrors({});
+
+    if (!formData.email) {
+      setFieldErrors({ email: "Email is required for OTP login." });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${endpoint}/candidates/auth/login/OTP`,
+        {
+          email: formData.email,
+        }
+      );
+
+      toast.success("Please check your email for an OTP verification code.");
+      setTimeout(() => {
+        navigate("/candidate/verify-email");
+      }, 5000);
+      console.log("[OTP] Response:", response.data);
+    } catch (error) {
+      console.error("[OTP Error]", error);
+      toast.info(
+        error.response?.data?.message || "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -224,13 +187,11 @@ function LoginCandidate() {
             </div>
           )}
           <div className="text-center space-y-2">
-            <ScanFace className="mx-auto text-blue-600" size={48} />
+            <ShieldIcon className="mx-auto text-green-600" size={48} />
             <h2 className="text-2xl font-bold text-gray-800">
               Candidate Login
             </h2>
-            <p className="text-sm text-gray-500">
-              Log in using your email and biometric verification
-            </p>
+            <p className="text-sm text-gray-500">Log in with an OTP</p>
           </div>
 
           {error && (
@@ -242,7 +203,7 @@ function LoginCandidate() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 text-center mb-5">
                 Email
               </label>
               <input
@@ -251,72 +212,17 @@ function LoginCandidate() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@gmail.com"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               {fieldErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
               )}
             </div>
 
-            <div className="text-center">
-              {!isScanning && (
-                <div className="mb-2 text-sm text-gray-600">
-                  <p>Before scanning, please ensure:</p>
-                  <ul className="list-disc list-inside text-left inline-block text-gray-500 text-xs mt-2">
-                    <li>You're looking directly into the camera</li>
-                    <li>Your face is centered in the frame</li>
-                    <li>You're in a well-lit area</li>
-                  </ul>
-                </div>
-              )}
-
-              {isScanning && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Please look directly into the camera lens.
-                  </p>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="w-full h-64 rounded-lg border border-gray-300"
-                  ></video>
-                </div>
-              )}
-
-              {capturedImage && !isScanning && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2">Captured Face:</p>
-                  <img
-                    src={capturedImage}
-                    alt="Captured face"
-                    className="w-full h-64 object-cover rounded-lg border border-gray-300"
-                  />
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={scanFace}
-                className="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition cursor-pointer mt-4"
-              >
-                <ScanFace className="mr-2" size={20} />
-                Scan Face
-              </button>
-              {fieldErrors.biometricData && (
-                <p className="text-red-500 text-xs mt-2">
-                  {fieldErrors.biometricData}
-                </p>
-              )}
-              <p className="mt-2 text-sm text-gray-500">
-                Facial scan required for login
-              </p>
-            </div>
-
             <div>
               <button
                 type="submit"
+                onClick={handleOTP}
                 className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
                   loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
                 } flex items-center justify-center`}
@@ -331,7 +237,7 @@ function LoginCandidate() {
             Don't have an account?{" "}
             <Link
               to="/candidate/registration"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Register here
             </Link>

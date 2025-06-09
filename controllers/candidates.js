@@ -238,6 +238,20 @@ const loginWithOTP = async (req, res) => {
   }
 };
 
+//Logout Candidate
+const logoutCandidate = async (req, res) => {
+  try {
+    if (!req.cookies?.candidateVotingSession) {
+      return res.status(409).json({ message: "You are not logged in." });
+    }
+    res.clearCookie("candidateVotingSession");
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Voter logout Error:", error);
+    res.status(500).json({ message: "Error occurred during logout." });
+  }
+};
+
 // Update Candidate
 const updateCandidate = async (req, res) => {
   const { candidateId } = req.params;
@@ -327,6 +341,7 @@ module.exports = {
   registerCandidate,
   loginCandidate,
   loginWithOTP,
+  logoutCandidate,
   updateCandidate,
   deleteCandidate,
 };

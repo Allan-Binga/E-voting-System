@@ -1,7 +1,11 @@
+import Navbar from "../../components/Navbar";
+import CandidateSidebar from "../../components/CandidateSidebar";
+
 function CandidateHome() {
   return (
     <div>
-      <p>Home of the candidate</p>
+      <Navbar />
+      <CandidateSidebar />
     </div>
   );
 }

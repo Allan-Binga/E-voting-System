@@ -11,6 +11,8 @@ import VoterLogin from "./pages/Login/VoterLogin";
 import VoterHome from "./pages/Homes/VoterHome";
 import CandidateRegister from "./pages/Register/CandidateRegister";
 import LoginCandidate from "./pages/Login/CandidateLogin";
+import CandidateHome from "./pages/Homes/CandidateHome";
+import CandidateApplication from "./pages/Applications/CandidateApplication";
 import AdminRegister from "./pages/Register/AdminRegister";
 import AdminLogin from "./pages/Login/AdminLogin";
 import AdminHome from "./pages/Homes/OfficlasHome";
@@ -35,7 +37,8 @@ function App() {
         <Route path="/voter/home" element={<VoterHome />} />
         <Route path="/candidate/registration" element={<CandidateRegister />} />
         <Route path="/candidate/login" element={<LoginCandidate />} />
-        <Route path="/candidate/home" element={<VoterHome />} />
+        <Route path="/candidate/home" element={<CandidateHome />} />
+        <Route path="/application/apply" element={<CandidateApplication/>}/>
         <Route path="/officials/registration" element={<AdminRegister />} />
         <Route path="/officials/login" element={<AdminLogin />} />
         <Route path="/officials/home" element={<AdminHome />} />
