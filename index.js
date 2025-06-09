@@ -12,7 +12,7 @@ const voteRoute = require("./routes/vote");
 const ballotRoute = require("./routes/ballot");
 const positionsRoute = require("./routes/positions");
 const usersRoute = require("./routes/users");
-const profileRoute = require("./routes/profile")
+const profileRoute = require("./routes/profile");
 
 //Import PG
 require("./config/db");
@@ -54,7 +54,22 @@ app.use("/e-voting-system/v1/vote", voteRoute);
 app.use("/e-voting-system/v1/ballot", ballotRoute);
 app.use("/e-voting-system/v1/position", positionsRoute);
 app.use("/e-voting-system/v1/users", usersRoute);
-app.use("/e-voting-system/v1/profiles", profileRoute)
+app.use("/e-voting-system/v1/profiles", profileRoute);
+
+// Serve static files in production
+if (process.env.NODE_ENV === "production") {
+  const clientDistPath = path.join(__dirname, "client", "dist");
+  app.use(express.static(clientDistPath));
+
+  // Fallback for frontend routes
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/e-voting")) {
+      res.sendFile(path.join(clientDistPath, "index.html"));
+    } else {
+      next();
+    }
+  });
+}
 
 // Start the server only if not in test environment
 if (process.env.NODE_ENV !== "test") {

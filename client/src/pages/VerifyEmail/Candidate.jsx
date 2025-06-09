@@ -89,7 +89,7 @@ function VerifyEmailCandidate() {
       );
       setSuccess("OTP Verification successful!");
 
-      setTimeout(() => navigate("/candidate/home"), 2000);
+      setTimeout(() => navigate("/application/apply"), 2000);
     } catch (err) {
       const msg =
         err.response?.data?.message || "Invalid OTP. Please try again.";
@@ -182,17 +182,14 @@ function VerifyEmailCandidate() {
           <button
             onClick={verifyOTP}
             disabled={loading || !isAllFilled} // Disable unless all inputs filled
-            className={`w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center gap-2 ${
+            className={`w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center cursor-pointer justify-center gap-2 ${
               loading ? "cursor-wait" : ""
             }`}
             aria-label="Verify OTP"
           >
             {loading ? (
               <>
-                <Spinner
-                  size="small"
-                  className="animate-spin w-5 h-5 text-white"
-                />
+                <Spinner size="small" />
                 Verifying...
               </>
             ) : (

@@ -1,56 +1,24 @@
-import { Fingerprint, ScanFace, ShieldIcon } from "lucide-react";
+import { ShieldIcon } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { endpoint } from "../../endpoint";
-import * as faceapi from "face-api.js";
 import axios from "axios";
 
 function LoginCandidate() {
-  const [formData, setFormData] = useState({ email: "", biometricData: "" });
+  const [formData, setFormData] = useState({ email: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-  const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [isScanning, setIsScanning] = useState(false); // Track scanning state
   const navigate = useNavigate();
-  const videoRef = useRef();
-  const streamRef = useRef(null); // Store the stream to stop it later
-  const canvasRef = useRef(null);
 
-  // Load Face-API models
-  useEffect(() => {
-    const loadModels = async () => {
-      const MODEL_URI = "/models";
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URI),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URI),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URI),
-      ]);
-      setModelsLoaded(true);
-    };
-    loadModels();
-  }, []);
-
-  // Clean up stream on component unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
-
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Validate email
     if (name === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
       if (!emailRegex.test(value)) {
@@ -64,85 +32,8 @@ function LoginCandidate() {
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleOTP = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    // Validate form
-    const newErrors = {};
-    if (!formData.email) {
-      newErrors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-    if (!formData.biometricData) {
-      newErrors.biometricData = "Please scan your face before logging in.";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      console.log("[Form] Validation errors:", newErrors);
-      setFieldErrors(newErrors);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${endpoint}/candidates/auth/candidate-login`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setFieldErrors({});
-        if (data.message?.toLowerCase().includes("email")) {
-          setFieldErrors({ email: data.message });
-        } else if (data.message?.toLowerCase().includes("biometric")) {
-          setFieldErrors({ biometricData: data.message });
-        } else {
-          setError(data.message || "Login failed. Please try again.");
-        }
-        return;
-      }
-
-      localStorage.setItem("userId", data.voter.id);
-      setSuccess("Login successful.");
-      toast.success("Login successful.");
-      setTimeout(() => {
-        navigate("/voter/home");
-      }, 4000);
-    } catch (error) {
-      console.error("[Form Error]", error);
-      const errorMessage = error.message?.toLowerCase?.();
-
-      if (errorMessage?.includes("already logged in")) {
-        toast.info("You are already logged in.", {
-          className:
-            "bg-blue-100 text-blue-800 font-medium rounded-md p-3 shadow",
-        });
-        navigate("/home");
-      } else {
-        setError(error.message || "Something went wrong.");
-        toast.error(error.message || "Something went wrong.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  //Handle OTP
-  const handleOTP = async () => {
     setError("");
     setSuccess("");
     setFieldErrors({});
@@ -201,7 +92,7 @@ function LoginCandidate() {
             <p className="text-green-600 text-sm text-center mt-4">{success}</p>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <form onSubmit={handleOTP} className="mt-6 space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 text-center mb-5">
                 Email
@@ -222,7 +113,6 @@ function LoginCandidate() {
             <div>
               <button
                 type="submit"
-                onClick={handleOTP}
                 className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
                   loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
                 } flex items-center justify-center`}
@@ -244,7 +134,6 @@ function LoginCandidate() {
           </p>
         </div>
       </div>
-      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 }

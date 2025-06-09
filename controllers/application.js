@@ -22,6 +22,32 @@ const getApplications = async (req, res) => {
   }
 };
 
+//Get A Candidate's Application
+const getMyApplications = async (req, res) => {
+  const candidateId = req.candidateId;
+  try {
+    //Fetch applications
+    const myApplicationQuery =
+      "SELECT * FROM applications WHERE candidate_id = $1";
+    const applications = await client.query(myApplicationQuery, [candidateId]);
+
+    if (applications.rows.length < 0) {
+      return res.status(409).json({
+        message:
+          "No appliccations yet. Please apply for executive or delegates position.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Fetched Applications",
+      applications: applications.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 //Apply as a delegate
 const applyDelegates = async (req, res) => {
   const candidateId = req.candidateId;
@@ -384,6 +410,7 @@ const rejectApplication = async (req, res) => {
 
 module.exports = {
   getApplications,
+  getMyApplications,
   applyDelegates,
   applyExecutive,
   approveApplication,

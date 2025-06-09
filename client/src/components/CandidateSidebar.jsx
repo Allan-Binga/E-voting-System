@@ -1,4 +1,4 @@
-import { Vote, ScrollText, User, LogOut, FileText } from "lucide-react";
+import { Vote, ScrollText, User, LogOut, FileText} from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../endpoint";
 import { toast } from "react-toastify";
@@ -41,24 +41,24 @@ function CandidateSidebar() {
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <FileText size={20} />
-          <span>Application</span>
+          <span>Applications</span>
         </a>
         <a
-          href="/vote-now"
+          href="/candidate/vote-now"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <Vote size={20} />
           <span>Vote Now</span>
         </a>
         <a
-          href="/results"
+          href="/candidate-results"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <ScrollText size={20} />
           <span>Election Results</span>
         </a>
         <a
-          href="/voter-profile"
+          href="/candidate-profile"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <User size={20} />

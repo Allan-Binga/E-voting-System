@@ -12,7 +12,7 @@ const getBallot = async (req, res) => {
       ballots: ballotResult.rows,
     });
   } catch (error) {
-    console.error("Error fetching applications:", error);
+    console.error("Error fetching ballots:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
