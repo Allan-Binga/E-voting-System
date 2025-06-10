@@ -5,6 +5,7 @@ import {
   ListChecks,
   ScrollText,
   LogOut,
+  File,
 } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../endpoint";
@@ -48,6 +49,13 @@ function AdminSidebar() {
           <span>Home</span>
         </a>
         <a
+          href="/officials/applications"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+        >
+          <File size={20} />
+          <span>Applications</span>
+        </a>
+        <a
           href="/officials/voters"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
@@ -62,7 +70,7 @@ function AdminSidebar() {
           <span>Candidates</span>
         </a>
         <a
-          href="/officlas/elections"
+          href="/officials/elections"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <ListChecks size={20} />

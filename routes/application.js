@@ -8,7 +8,7 @@ router.post("/apply-delegates", authCandidate, applyDelegates)
 router.post("/apply-executive", authCandidate, applyExecutive)
 router.put("/approve-application", authAdmin, approveApplication)
 router.put("/reject-application", authAdmin, rejectApplication)
-router.get("/all-applications", getApplications)
+router.get("/all-applications", authAdmin, getApplications)
 router.get("/my-applications",authCandidate, getMyApplications)
 
 module.exports = router;

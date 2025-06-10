@@ -30,6 +30,7 @@ import Candidates from "./pages/Candidates/Candidates";
 import VerifyEmailUser from "./pages/VerifyEmail/User";
 import VerifyEmailAdmin from "./pages/VerifyEmail/Admin";
 import VerifyEmailCandidate from "./pages/VerifyEmail/Candidate";
+import OfficialsApplications from "./pages/Applications/OfficialsApplications";
 
 function App() {
   return (
@@ -54,9 +55,10 @@ function App() {
         <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/admin-results" element={<AdminResults />} />
         <Route path="/candidate-results" element={<CandidateResult />} />
-        <Route path="/elections" element={<Election />} />
+        <Route path="/officials/elections" element={<Election />} />
         <Route path="/officials/voters" element={<Voters />} />
         <Route path="/officials/candidates" element={<Candidates />} />
+         <Route path="/officials/applications" element={<OfficialsApplications />} />
         <Route path="/user/verify-email" element={<VerifyEmailUser />} />
         <Route path="/official/verify-email" element={<VerifyEmailAdmin />} />
         <Route

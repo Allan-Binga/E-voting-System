@@ -1,48 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
 import { Users, Search, Filter, UserCheck, UserX } from "lucide-react";
+import axios from "axios";
+import { endpoint } from "../../endpoint";
+import ProfileImage from "../../assets/user.png";
 
 function Voters() {
-  // Mock data for voters (replace with backend API data)
-  const initialVoters = [
-    {
-      id: 1,
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@mmu.ac.ke",
-      registrationNumber: "SCI/1234/2023",
-      faculty: "Faculty of Computing and Informatics",
-      status: "Active",
-    },
-    {
-      id: 2,
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@mmu.ac.ke",
-      registrationNumber: "ENG/5678/2023",
-      faculty: "Faculty of Engineering",
-      status: "Inactive",
-    },
-    {
-      id: 3,
-      firstName: "Alice",
-      lastName: "Johnson",
-      email: "alice.johnson@mmu.ac.ke",
-      registrationNumber: "BUS/9012/2023",
-      faculty: "Faculty of Business",
-      status: "Active",
-    },
-  ];
-
-  // State for search, filter, and sort
-  const [voters, setVoters] = useState(initialVoters);
+  const [voters, setVoters] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [facultyFilter, setFacultyFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("name"); // name or registrationNumber
+  const [sortBy, setSortBy] = useState("name");
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVoter, setSelectedVoter] = useState(null);
+  const [updateForm, setUpdateForm] = useState({
+    firstName: "",
+    lastName: "",
+    faculty: "",
+    registrationNumber: "",
+  });
 
-  // Filter and sort voters
+  // Fetch Voters from API
+  const getVoters = async () => {
+    try {
+      const response = await axios.get(`${endpoint}/users/voters`);
+      const votersData = response.data.voters;
+
+      const normalized = votersData.map((voter) => ({
+        id: voter.user_id,
+        firstName: voter.first_name,
+        lastName: voter.last_name,
+        email: voter.email,
+        registrationNumber: voter.registration_number,
+        faculty: voter.faculty,
+        status: voter.status,
+        votingStatus: voter.voting_status,
+        capturedImage: voter.captured_image,
+      }));
+
+      setVoters(normalized);
+    } catch (error) {
+      console.error("Failed to fetch voters:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getVoters();
+  }, []);
+
   const filteredVoters = voters
     .filter((voter) => {
       const fullName = `${voter.firstName} ${voter.lastName}`.toLowerCase();
@@ -66,10 +75,8 @@ function Voters() {
       return a.registrationNumber.localeCompare(b.registrationNumber);
     });
 
-  // Get unique faculties for filter
   const faculties = ["All", ...new Set(voters.map((voter) => voter.faculty))];
 
-  // Toggle voter status (mock action)
   const toggleStatus = (id) => {
     setVoters((prev) =>
       prev.map((voter) =>
@@ -83,50 +90,109 @@ function Voters() {
     );
   };
 
+  // Open Update Modal
+  const openUpdateModal = (voter) => {
+    setSelectedVoter(voter);
+    setUpdateForm({
+      firstName: voter.firstName,
+      lastName: voter.lastName,
+      faculty: voter.faculty,
+      registrationNumber: voter.registrationNumber,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Handle Form Input Changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUpdateForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Update Voter API
+  const updateVoter = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.patch(
+        `${endpoint}/voters/update-voter/${selectedVoter.id}`,
+        {
+          first_name: updateForm.firstName,
+          last_name: updateForm.lastName,
+          faculty: updateForm.faculty,
+          registration_number: updateForm.registrationNumber,
+        },
+        { withCredentials: true }
+      );
+
+      // Update local state
+      setVoters((prev) =>
+        prev.map((voter) =>
+          voter.id === selectedVoter.id
+            ? {
+                ...voter,
+                firstName: updateForm.firstName,
+                lastName: updateForm.lastName,
+                faculty: updateForm.faculty,
+                registrationNumber: updateForm.registrationNumber,
+              }
+            : voter
+        )
+      );
+
+      setIsModalOpen(false);
+      alert("Voter updated successfully!");
+    } catch (error) {
+      console.error("Failed to update voter:", error);
+      alert("Failed to update voter. Please try again.");
+    }
+  };
+
+  // Deactivate Voter API
+  const deactivateVoter = async (voterId) => {
+    if (!window.confirm("Are you sure you want to deactivate this voter?"))
+      return;
+
+    try {
+      const response = await axios.delete(
+        `${endpoint}/voters/deactivate-voter/${voterId}`,
+        { withCredentials: true }
+      );
+
+      // Remove voter from local state
+      setVoters((prev) => prev.filter((voter) => voter.id !== voterId));
+      alert("Voter deactivated successfully!");
+    } catch (error) {
+      console.error("Failed to deactivate voter:", error);
+      alert("Failed to deactivate voter. Please try again.");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Navbar */}
       <Navbar />
-
       <div className="flex flex-1">
-        {/* Admin Sidebar */}
         <AdminSidebar />
-
-        {/* Main Content */}
         <main className="ml-64 p-6 flex-1">
           <div className="max-w-4xl mx-auto">
-            {/* Page Header */}
             <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
-              <Users size={24} className="text-gray-500" aria-hidden="true" />
+              <Users size={24} className="text-gray-500" />
               <span>Voters</span>
             </h1>
 
-            {/* Search and Filter Controls */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4 mb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                {/* Search Bar */}
                 <div className="flex items-center space-x-2 w-full md:w-1/2">
-                  <Search
-                    size={20}
-                    className="text-gray-500"
-                    aria-hidden="true"
-                  />
+                  <Search size={20} className="text-gray-500" />
                   <input
                     type="text"
                     placeholder="Search by name or registration number..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-                {/* Filters */}
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <Filter
-                      size={16}
-                      className="text-gray-500"
-                      aria-hidden="true"
-                    />
+                    <Filter size={16} className="text-gray-500" />
                     <select
                       value={facultyFilter}
                       onChange={(e) => setFacultyFilter(e.target.value)}
@@ -140,15 +206,11 @@ function Voters() {
                     </select>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Filter
-                      size={16}
-                      className="text-gray-500"
-                      aria-hidden="true"
-                    />
+                    <Filter size={16} className="text-gray-500" />
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm"
+                      className="px-3 py-2 border  border-gray-200 rounded-md text-gray-600 text-sm"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Active">Active</option>
@@ -157,94 +219,188 @@ function Voters() {
                   </div>
                 </div>
               </div>
-              {/* Sort */}
               <div className="mt-4 flex items-center space-x-2">
-                <Filter
-                  size={16}
-                  className="text-gray-500"
-                  aria-hidden="true"
-                />
+                <Filter size={16} className="text-gray-500" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm"
                 >
                   <option value="name">Sort by Name</option>
-                  <option value="registrationNumber">
-                    Sort by Registration Number
-                  </option>
+                  <option value="registrationNumber">Sort by Reg. No.</option>
                 </select>
               </div>
             </div>
 
-            {/* Voters Table */}
-            <div className="bg-white border border-gray-100 shadow-sm rounded-lg overflow-hidden">
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-600 text-sm font-medium">
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Registration Number</th>
-                    <th className="px-4 py-3 text-left">Faculty</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredVoters.map((voter) => (
-                    <tr
-                      key={voter.id}
-                      className="border-t border-gray-100 text-gray-800 hover:bg-blue-50 transition-colors"
-                    >
-                      <td className="px-4 py-3">{`${voter.firstName} ${voter.lastName}`}</td>
-                      <td className="px-4 py-3">{voter.email}</td>
-                      <td className="px-4 py-3">{voter.registrationNumber}</td>
-                      <td className="px-4 py-3">{voter.faculty}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`flex items-center space-x-2 ${
-                            voter.status === "Active"
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {voter.status === "Active" ? (
-                            <UserCheck size={16} aria-hidden="true" />
-                          ) : (
-                            <UserX size={16} aria-hidden="true" />
-                          )}
-                          <span>{voter.status}</span>
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => toggleStatus(voter.id)}
-                          className={`px-3 py-1 text-sm font-medium rounded-md ${
-                            voter.status === "Active"
-                              ? "bg-red-600 text-white hover:bg-red-700"
-                              : "bg-green-600 text-white hover:bg-green-700"
-                          } transition-colors`}
-                        >
-                          {voter.status === "Active"
-                            ? "Deactivate"
-                            : "Activate"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Empty State */}
-            {filteredVoters.length === 0 && (
-              <div className="text-center text-gray-600 mt-6">
-                No voters found matching your criteria.
+            {loading ? (
+              <div className="text-center mt-8 text-gray-500">
+                Loading voters...
               </div>
+            ) : (
+              <>
+                <div className="bg-white border border-gray-100 shadow-sm rounded-lg overflow-hidden">
+                  <table className="w-full table-auto">
+                    <thead>
+                      <tr className="bg-gray-100 text-gray-600 text-sm font-medium">
+                        <th className="px-4 py-3 text-left">Name</th>
+                        <th className="px-4 py-3 text-left">Email</th>
+                        <th className="px-4 py-3 text-left">
+                          Registration Number
+                        </th>
+                        <th className="px-4 py-3 text-left">Faculty</th>
+                        <th className="px-4 py-3 text-left">Status</th>
+                        <th className="px-4 py-3 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredVoters.map((voter) => (
+                        <tr
+                          key={voter.id}
+                          className="border-t border-gray-100 text-gray-800 hover:bg-blue-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 flex items-center space-x-3">
+                            <img
+                              src={voter.capturedImage || ProfileImage}
+                              alt="Profile"
+                              className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                            />
+                            <span>{`${voter.firstName} ${voter.lastName}`}</span>
+                          </td>
+                          <td className="px-4 py-3">{voter.email}</td>
+                          <td className="px-4 py-3">
+                            {voter.registrationNumber}
+                          </td>
+                          <td className="px-4 py-3">{voter.faculty}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`flex items-center space-x-2 ${
+                                voter.status === "Active"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {voter.status === "Active" ? (
+                                <UserCheck size={16} />
+                              ) : (
+                                <UserX size={16} />
+                              )}
+                              <span>{voter.status}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 space-x-2">
+                            <button
+                              onClick={() => openUpdateModal(voter)}
+                              className="px-3 py-1 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                            >
+                              Update
+                            </button>
+                            <button
+                              onClick={() => deactivateVoter(voter.id)}
+                              className={`px-3 py-1 text-sm font-medium rounded-md ${
+                                voter.status === "Active"
+                                  ? "bg-red-600 text-white hover:bg-red-700"
+                                  : "bg-green-600 text-white hover:bg-green-700"
+                              } transition-colors`}
+                            >
+                              {voter.status === "Active"
+                                ? "Deactivate"
+                                : "Activate"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {filteredVoters.length === 0 && (
+                  <div className="text-center text-gray-600 mt-6">
+                    No voters found matching your criteria.
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>
       </div>
+
+      {/* Update Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Update Voter</h2>
+            <form onSubmit={updateVoter}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={updateForm.firstName}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={updateForm.lastName}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Faculty
+                </label>
+                <input
+                  type="text"
+                  name="faculty"
+                  value={updateForm.faculty}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Registration Number
+                </label>
+                <input
+                  type="text"
+                  name="registrationNumber"
+                  value={updateForm.registrationNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
