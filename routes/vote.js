@@ -4,6 +4,6 @@ const { authUser } = require("../middleware/jwt");
 
 const router = express.Router();
 
-router.post("/vote-now", authUser, voteNow);
+router.post("/user/vote-now", authUser, voteNow);
 
 module.exports = router;

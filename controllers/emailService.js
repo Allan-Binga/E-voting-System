@@ -13,6 +13,53 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Send a Welcome Email
+const sendWelcomeEmail = async (firstName, lastName, email) => {
+  const mailOptions = {
+    from: `"Multimedia e-Voting System" <${process.env.MAIL_USER}>`,
+    to: email,
+    subject: "Welcome to the Multimedia e-Voting System!",
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f7fa; color: #333;">
+        <!-- Header -->
+        <div style="background-color: #1a73e8; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Multimedia e-Voting System</h1>
+        </div>
+        <!-- Body -->
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="font-size: 20px; color: #1a73e8;">Welcome, ${firstName} ${lastName} 👋</h2>
+          <p style="font-size: 16px; line-height: 1.5;">
+            We're excited to have you join the Multimedia e-Voting System. Your account has been successfully created and you're now part of a secure, transparent, and efficient digital voting experience.
+          </p>
+          <p style="font-size: 16px; line-height: 1.5;">
+            From here, you can participate in upcoming elections, submit applications if you're a candidate, and stay informed with real-time updates.
+          </p>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="#" style="background-color: #1a73e8; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 16px; display: inline-block;">Get Started</a>
+          </div>
+          <p style="font-size: 14px; color: #666; line-height: 1.5;">
+            If you have any questions or need assistance, our support team is here to help.
+          </p>
+        </div>
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+          <p>Multimedia e-Voting System Team</p>
+          <p>Nairobi, Kenya</p>
+          <p><a href="#" style="color: #1a73e8; text-decoration: none;">Contact Support</a> | <a href="#" style="color: #1a73e8; text-decoration: none;">Unsubscribe</a></p>
+          <p>&copy; ${new Date().getFullYear()} Multimedia e-Voting System. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending welcome email:", error);
+    throw error;
+  }
+};
+
 //Send OTP Email
 const sendOTPEmail = async (email, otp) => {
   const mailOptions = {
@@ -193,13 +240,68 @@ const sendApprovalOrRejectionEmail = async (email, approval_status) => {
   }
 };
 
-//Send Successful/Failure Vote email
+// Send Successful Vote Email
 const sendVoteStatusEmail = async (email, voter_status) => {
+  const isSuccess = voter_status === "Voted";
+
+  const subject = isSuccess
+    ? "Your Vote Has Been Successfully Recorded"
+    : "Your Voting Attempt Was Unsuccessful";
+
+  const messageBody = isSuccess
+    ? `<p style="font-size: 16px; line-height: 1.5;">Thank you for participating in the election. Your vote has been successfully recorded and counted.</p>`
+    : `<p style="font-size: 16px; line-height: 1.5;">We regret to inform you that your voting attempt was unsuccessful. Please contact support for assistance.</p>`;
+
+  const ctaText = isSuccess ? "View Voting History" : "Try Again";
+
+  const mailOptions = {
+    from: `"Multimedia e-Voting Management System" <${process.env.MAIL_USER}>`,
+    to: email,
+    subject,
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f7fa; color: #333;">
+        <!-- Header -->
+        <div style="background-color: ${
+          isSuccess ? "#1a73e8" : "#ea4335"
+        }; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Multimedia e-Voting System</h1>
+        </div>
+        <!-- Body -->
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="font-size: 20px; color: ${
+            isSuccess ? "#1a73e8" : "#ea4335"
+          };">Hello Voter,</h2>
+          ${messageBody}
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="#" style="background-color: ${
+              isSuccess ? "#1a73e8" : "#ea4335"
+            }; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 16px; display: inline-block;">
+              ${ctaText}
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #666; line-height: 1.5;">If you have any questions, please reach out to our support team.</p>
+        </div>
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+          <p>Multimedia e-Voting System Team</p>
+          <p>1234 Vote Securely Ave, Democracy City, DC 12345</p>
+          <p><a href="#" style="color: #1a73e8; text-decoration: none;">Contact Support</a> | <a href="#" style="color: #1a73e8; text-decoration: none;">Unsubscribe</a></p>
+          <p>&copy; ${new Date().getFullYear()} Multimedia e-Voting System. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  };
+
   try {
-  } catch (error) {}
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending vote status email.", error);
+    throw error;
+  }
 };
 
 module.exports = {
+  sendWelcomeEmail,
   sendOTPEmail,
   sendCandidateApplicationEmail,
   sendAdminApplicationApprovalEmail,

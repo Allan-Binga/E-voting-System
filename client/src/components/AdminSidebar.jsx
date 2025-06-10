@@ -48,28 +48,28 @@ function AdminSidebar() {
           <span>Home</span>
         </a>
         <a
-          href="/voters"
+          href="/officials/voters"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <Users size={20} />
           <span>Voters</span>
         </a>
         <a
-          href="/candidates"
+          href="/officials/candidates"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <UserPlus size={20} />
           <span>Candidates</span>
         </a>
         <a
-          href="/elections"
+          href="/officlas/elections"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <ListChecks size={20} />
           <span>Elections</span>
         </a>
         <a
-          href="/admin-results"
+          href="/officials/admin-results"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <ScrollText size={20} />

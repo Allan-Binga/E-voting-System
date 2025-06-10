@@ -13,23 +13,12 @@ function CandidateProfile() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        `${endpoint}/profiles/profile/candidate/my-profile`,
+        `${endpoint}/profiles/profile/voter/my-profile`,
         { withCredentials: true }
       );
 
-      const profileData = response.data.profile[0];
-
-      // Convert biometric_data buffer to base64 string
-      const byteArray = new Uint8Array(profileData.biometric_data.data);
-      const base64String = btoa(
-        byteArray.reduce((data, byte) => data + String.fromCharCode(byte), "")
-      );
-      const biometricImageUrl = `data:image/jpeg;base64,${base64String}`;
-
-      setCandidateProfile({
-        ...profileData,
-        biometricImageUrl,
-      });
+      const profileData = response.data.profile;
+      setUserProfile(profileData);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     } finally {

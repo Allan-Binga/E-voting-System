@@ -2,7 +2,7 @@ const client = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const { sendOTPEmail } = require("./emailService");
+const { sendOTPEmail, sendWelcomeEmail } = require("./emailService");
 
 function euclideanDistance(arr1, arr2) {
   if (arr1.length !== arr2.length) return Infinity;
@@ -115,6 +115,9 @@ const registerVoter = async (req, res) => {
     // Update registration number
     const updateQuery = `UPDATE users SET registration_number = $1 WHERE user_id = $2`;
     await client.query(updateQuery, [registrationNumber, userId]);
+
+    //Send Welcome email
+    await sendWelcomeEmail(firstName, lastName, email)
 
     res
       .status(201)

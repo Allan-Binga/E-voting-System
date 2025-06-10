@@ -13,11 +13,14 @@ function VerifyEmailUser() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [resendTimer, setResendTimer] = useState(0);
   const [showResendModal, setShowResendModal] = useState(false);
+  const [isInvalidOtp, setIsInvalidOtp] = useState(false);
   const location = useLocation();
   const email = location.state?.email || "";
   const [resendEmail, setResendEmail] = useState(email);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
+
+  const isAllFilled = otp.every((digit) => digit !== "");
 
   // Resend OTP timer
   useEffect(() => {
@@ -31,11 +34,13 @@ function VerifyEmailUser() {
 
   const handleChange = (e, index) => {
     const value = e.target.value;
-    if (!/^\d?$/.test(value)) return; // Allow only digits
+    if (!/^\d?$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
+    setIsInvalidOtp(false);
+    setFieldErrors({});
 
     if (value && index < otp.length - 1) {
       inputsRef.current[index + 1].focus();
@@ -43,8 +48,22 @@ function VerifyEmailUser() {
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1].focus();
+    if (e.key === "Backspace") {
+      const newOtp = [...otp];
+      if (!otp[index] && index > 0) {
+        inputsRef.current[index - 1].focus();
+      } else {
+        newOtp[index] = "";
+        setOtp(newOtp);
+        setIsInvalidOtp(false);
+        setFieldErrors({});
+      }
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (isAllFilled && !loading) {
+        verifyOTP();
+      }
     }
   };
 
@@ -63,10 +82,7 @@ function VerifyEmailUser() {
       setLoading(true);
       const response = await axios.post(
         `${endpoint}/auth/verification/verify-OTP`,
-
-        {
-          otp: finalOtp,
-        },
+        { otp: finalOtp },
         { withCredentials: true }
       );
       setSuccess("OTP Verification successful!");
@@ -75,9 +91,10 @@ function VerifyEmailUser() {
       const msg =
         err.response?.data?.message || "Invalid OTP. Please try again.";
       setError(msg);
+      setIsInvalidOtp(true);
 
       if (msg.toLowerCase().includes("expired")) {
-        setShowResendModal(true); // 🧠 show modal if expired
+        setShowResendModal(true);
       }
     } finally {
       setLoading(false);
@@ -129,8 +146,10 @@ function VerifyEmailUser() {
                 value={digit}
                 onChange={(e) => handleChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
-                className={`w-12 h-12 text-center text-xl font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
-                  fieldErrors.otp ? "border-red-500" : "border-gray-300"
+                className={`w-12 h-12 text-center text-xl font-medium border rounded-lg transition focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  fieldErrors.otp || isInvalidOtp
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
                 aria-label={`OTP digit ${index + 1}`}
               />
@@ -158,7 +177,7 @@ function VerifyEmailUser() {
           <button
             onClick={verifyOTP}
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center"
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center cursor-pointer"
             aria-label="Verify OTP"
           >
             {loading ? <Spinner size="small" /> : "Verify OTP"}
@@ -167,7 +186,7 @@ function VerifyEmailUser() {
           <button
             onClick={resendOTP}
             disabled={loading || resendTimer > 0}
-            className={`mt-4 w-full text-sm text-blue-600 hover:underline text-center ${
+            className={`mt-4 w-full text-sm text-green-600 hover:underline text-center ${
               resendTimer > 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
             aria-label="Resend OTP"
@@ -189,7 +208,7 @@ function VerifyEmailUser() {
               type="email"
               value={resendEmail}
               onChange={(e) => setResendEmail(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded mb-4"
+              className="w-full border border-gray-300 p-2 rounded mb-4 focus:outline-none focus:ring-green-500"
               placeholder="Enter your email"
             />
             <div className="flex justify-end gap-2">
@@ -201,7 +220,7 @@ function VerifyEmailUser() {
               </button>
               <button
                 onClick={resendOTP}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Resend OTP
               </button>

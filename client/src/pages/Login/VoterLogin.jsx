@@ -166,7 +166,7 @@ function VoterLogin() {
     }
 
     try {
-      const response = await fetch(`${endpoint}/auth/users/login-voter`, {
+      const response = await fetch(`${endpoint}/auth/users/voter/login-voter`, {
         method: "POST",
         credentials: "include",
         headers: {

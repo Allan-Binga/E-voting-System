@@ -1,18 +1,62 @@
+import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
-import { User, Mail, Camera, CheckCircle, School, Hash } from "lucide-react";
+import { User, Mail, CheckCircle, School, Hash } from "lucide-react";
+import Spinner from "../../components/Spinner";
+import axios from "axios";
+import { endpoint } from "../../endpoint";
+import ProfileImage from "../../assets/user.png";
 
 function VoterProfile() {
-  // Mock data for demonstration (replace with actual data from your backend)
-  const voter = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@mmu.ac.ke",
-    biometricData: "https://via.placeholder.com/150", // Placeholder for biometric image
-    status: "Active",
-    faculty: "Faculty of Computing and Informatics",
-    registrationNumber: "SCI/1234/2023",
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await axios.get(
+        `${endpoint}/profiles/profile/voter/my-profile`,
+        { withCredentials: true }
+      );
+
+      const profileData = response.data.profile;
+
+      // Convert biometric_data buffer to base64 string
+      const byteArray = new Uint8Array(profileData.biometric_data.data);
+      const base64String = btoa(
+        byteArray.reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+      const biometricImageUrl = `data:image/jpeg;base64,${base64String}`;
+
+      setUserProfile({
+        ...profileData,
+        biometricImageUrl,
+      });
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-red-600">Failed to load profile.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -21,7 +65,9 @@ function VoterProfile() {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar />
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
 
         {/* Main Content */}
         <main className="ml-64 p-6 flex-1">
@@ -37,122 +83,103 @@ function VoterProfile() {
                 {/* Biometric Image */}
                 <div className="flex-shrink-0">
                   <img
-                    src={voter.biometricData}
+                    src={ProfileImage}
                     alt="Biometric Profile"
-                    className="w-32 h-32 rounded-md object-cover border border-gray-200"
+                    className="w-30 h-30 rounded-md object-cover"
                   />
                 </div>
 
                 {/* Voter Details */}
                 <div className="flex-1 w-full">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* First Name */}
-                    <div className="flex items-center space-x-2">
-                      <User
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          First Name
-                        </label>
-                        <p className="text-gray-800 font-medium">
-                          {voter.firstName}
-                        </p>
+                    {/* Detail Item */}
+                    {[
+                      {
+                        label: "First Name",
+                        icon: (
+                          <User
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: userProfile.first_name,
+                      },
+                      {
+                        label: "Last Name",
+                        icon: (
+                          <User
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: userProfile.last_name,
+                      },
+                      {
+                        label: "Email",
+                        icon: (
+                          <Mail
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: userProfile.email,
+                      },
+                      {
+                        label: "Status",
+                        icon: (
+                          <CheckCircle
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: (
+                          <span
+                            className={`font-medium ${
+                              userProfile.status === "Active"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {userProfile.status || "N/A"}
+                          </span>
+                        ),
+                      },
+                      {
+                        label: "Faculty",
+                        icon: (
+                          <School
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: userProfile.faculty,
+                      },
+                      {
+                        label: "Registration Number",
+                        icon: (
+                          <Hash
+                            size={20}
+                            className="text-gray-500 flex-shrink-0"
+                          />
+                        ),
+                        value: userProfile.registration_number,
+                      },
+                    ].map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-2 break-words"
+                      >
+                        {item.icon}
+                        <div className="min-w-0">
+                          <label className="text-sm font-medium text-gray-500">
+                            {item.label}
+                          </label>
+                          <p className="text-gray-800 font-medium break-words truncate max-w-xs">
+                            {item.value || "N/A"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Last Name */}
-                    <div className="flex items-center space-x-2">
-                      <User
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          Last Name
-                        </label>
-                        <p className="text-gray-800 font-medium">
-                          {voter.lastName}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Email */}
-                    <div className="flex items-center space-x-2">
-                      <Mail
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          Email
-                        </label>
-                        <p className="text-gray-800 font-medium">
-                          {voter.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          Status
-                        </label>
-                        <p
-                          className={`font-medium ${
-                            voter.status === "Active"
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {voter.status}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Faculty */}
-                    <div className="flex items-center space-x-2">
-                      <School
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          Faculty
-                        </label>
-                        <p className="text-gray-800 font-medium">
-                          {voter.faculty}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Registration Number */}
-                    <div className="flex items-center space-x-2">
-                      <Hash
-                        size={20}
-                        className="text-gray-500"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">
-                          Registration Number
-                        </label>
-                        <p className="text-gray-800 font-medium">
-                          {voter.registrationNumber}
-                        </p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>

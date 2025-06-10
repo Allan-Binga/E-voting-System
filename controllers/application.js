@@ -8,9 +8,28 @@ const {
 // Get Applications
 const getApplications = async (req, res) => {
   try {
-    // Applications Query
-    const applicationQuery = "SELECT * FROM applications";
-    const applicationResult = await client.query(applicationQuery);
+    const { position } = req.query;
+
+    let applicationQuery = `
+      SELECT 
+        a.*, 
+        c.first_name || ' ' || c.last_name AS full_name
+      FROM 
+        applications a
+      JOIN 
+        candidates c 
+      ON 
+        a.candidate_id = c.candidate_id
+    `;
+
+    const values = [];
+
+    if (position && (position === "Executive" || position === "Delegate")) {
+      applicationQuery += " WHERE a.position_contested = $1";
+      values.push(position);
+    }
+
+    const applicationResult = await client.query(applicationQuery, values);
 
     return res.status(200).json({
       message: "Applications retrieved successfully.",

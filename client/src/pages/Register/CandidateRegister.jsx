@@ -166,7 +166,7 @@ function CandidateRegister() {
           )}
 
           <div className="text-center space-y-2">
-            <ScanFace className="mx-auto text-blue-600" size={48} />
+            <Fingerprint className="mx-auto text-green-600" size={48} />
             <h2 className="text-2xl font-bold text-gray-800">
               Candidate Registration
             </h2>
@@ -256,7 +256,7 @@ function CandidateRegister() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="John"
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 {fieldErrors.firstName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -275,7 +275,7 @@ function CandidateRegister() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 {fieldErrors.lastName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -286,7 +286,7 @@ function CandidateRegister() {
             </div>
 
             <div>
-              <label className="block text-md font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Email
               </label>
               <input
@@ -295,7 +295,7 @@ function CandidateRegister() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@gmail.com"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               {fieldErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
@@ -309,10 +309,10 @@ function CandidateRegister() {
                 name="faculty"
                 value={formData.faculty}
                 onChange={handleChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="" className="text-gray-800">
-                  -- Select Faculty --
+                <option value="" className="text-gray-500 text-center">
+                  FACULTY
                 </option>
                 {faculties.map((faculty) => (
                   <option key={faculty} value={faculty}>
@@ -368,7 +368,7 @@ function CandidateRegister() {
               <button
                 type="button"
                 onClick={scanFace}
-                className="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition cursor-pointer mt-4"
+                className="w-full inline-flex justify-center items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition cursor-pointer mt-4"
               >
                 <ScanFace className="mr-2" size={20} />
                 {capturedImage ? "Rescan Face" : "Scan Face"}
@@ -399,7 +399,7 @@ function CandidateRegister() {
             Already have an account?{" "}
             <Link
               to="/candidate/login"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Login Here
             </Link>
@@ -408,7 +408,7 @@ function CandidateRegister() {
             Are you a voter?
             <Link
               to="/voter/registration"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Click here
             </Link>

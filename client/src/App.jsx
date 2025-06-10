@@ -55,8 +55,8 @@ function App() {
         <Route path="/admin-results" element={<AdminResults />} />
         <Route path="/candidate-results" element={<CandidateResult />} />
         <Route path="/elections" element={<Election />} />
-        <Route path="/voters" element={<Voters />} />
-        <Route path="/candidates" element={<Candidates />} />
+        <Route path="/officials/voters" element={<Voters />} />
+        <Route path="/officials/candidates" element={<Candidates />} />
         <Route path="/user/verify-email" element={<VerifyEmailUser />} />
         <Route path="/official/verify-email" element={<VerifyEmailAdmin />} />
         <Route

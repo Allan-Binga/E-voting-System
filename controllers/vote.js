@@ -1,5 +1,5 @@
 const client = require("../config/db");
-const {sendVoteStatusEmail} = require("./emailService")
+const { sendVoteStatusEmail } = require("./emailService");
 
 function euclideanDistance(arr1, arr2) {
   if (arr1.length !== arr2.length) return Infinity;
@@ -32,6 +32,7 @@ const voteNow = async (req, res) => {
     }
 
     const user = result.rows[0];
+    const email = user.email;
 
     //Convert stored biometric data to FLoat32Array
     const storedDescriptor = new Float32Array(
@@ -73,8 +74,11 @@ const voteNow = async (req, res) => {
     await client.query(updateStatusQuery, [user_id]);
 
     //Increment total_votes in BALLOTS
-    const updateBallotQuery = `UPDATE ballot SET totol_votes = total_votes + 1`;
+    const updateBallotQuery = `UPDATE ballot SET total_votes = total_votes + 1`;
     await client.query(updateBallotQuery);
+
+    //Send voting email
+    await sendVoteStatusEmail(email, "Voted");
     res.status(200).json({ message: "Vote cast successfully." });
   } catch (error) {
     console.error(error);

@@ -61,7 +61,7 @@ function AdminRegister() {
               Election Officials
             </h2>
             <p className="text-sm text-gray-500">
-              Register to vote using biometric verification
+              Register here as an official
             </p>
           </div>
 
@@ -131,42 +131,44 @@ function AdminRegister() {
             }}
             className="mt-6 space-y-5"
           >
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="John"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.firstName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.firstName}
-                </p>
-              )}
-            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <label className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="John"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {fieldErrors.firstName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.firstName}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Doe"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fieldErrors.lastName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.lastName}
-                </p>
-              )}
+              <div className="w-full md:w-1/2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {fieldErrors.lastName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.lastName}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -235,7 +237,7 @@ function AdminRegister() {
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{" "}
             <Link
-              to="/voter/login"
+              to="/officials/login"
               className="text-blue-600 hover:underline font-medium"
             >
               Login Here
