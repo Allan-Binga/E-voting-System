@@ -202,7 +202,7 @@ function VoterLogin() {
       if (errorMessage?.includes("already logged in")) {
         toast.info("You are already logged in.", {
           className:
-            "bg-blue-100 text-blue-800 font-medium rounded-md p-3 shadow",
+            "bg-green-100 text-green-800 font-medium rounded-md p-3 shadow",
         });
         navigate("/home");
       } else {
@@ -260,7 +260,7 @@ function VoterLogin() {
             </div>
           )}
           <div className="text-center space-y-2">
-            <ScanFace className="mx-auto text-blue-600" size={48} />
+            <ScanFace className="mx-auto text-green-600" size={48} />
             <h2 className="text-2xl font-bold text-gray-800">Voter Login</h2>
             <p className="text-sm text-gray-500">
               Log in using your email and biometric verification
@@ -285,7 +285,7 @@ function VoterLogin() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@gmail.com"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-center"
               />
               {fieldErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
@@ -332,7 +332,7 @@ function VoterLogin() {
               <button
                 type="button"
                 onClick={scanFace}
-                className="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition cursor-pointer mt-4"
+                className="w-full inline-flex justify-center items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition cursor-pointer mt-4"
               >
                 <ScanFace className="mr-2" size={20} />
                 Scan Face
@@ -356,7 +356,8 @@ function VoterLogin() {
                 } flex items-center justify-center`}
                 disabled={loading}
               >
-                Log In
+                <ScanFace className="mr-2 w-5 h-5" />
+                Login with Face ID
               </button>
               <span className="text-md text-gray-500">Or</span>
               <button
@@ -381,7 +382,7 @@ function VoterLogin() {
             Don't have an account?{" "}
             <Link
               to="/voter/registration"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Register here
             </Link>

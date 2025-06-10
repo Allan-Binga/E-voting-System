@@ -1,4 +1,4 @@
-import Sidebar from "../../components/Sidebar";
+import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
 import { Vote, Award, Users } from "lucide-react";
 
@@ -42,7 +42,7 @@ function ElectionResult() {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar />
+        <AdminSidebar />
 
         {/* Main Content */}
         <main className="ml-64 p-6 flex-1">

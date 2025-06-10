@@ -2,32 +2,24 @@ const client = require("../config/db");
 
 // General Election Creation
 const createGeneralElection = async (req, res) => {
-  const { title, startTime, endTime } = req.body;
+  const { title, description, startDate, endDate, status } = req.body;
 
   try {
     // Validate required fields
-    if (!title || !startTime || !endTime) {
+    if (!title || !description || !startDate || !endDate || !status) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Validate that endTime is exactly 24 hours after startTime
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const timeDifference = end - start;
-    const twentyFourHoursInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-    if (timeDifference !== twentyFourHoursInMs) {
-      return res
-        .status(400)
-        .json({ message: "Election duration must be exactly 24 hours" });
-    }
+    // Validate that endDate is exactly 24 hours after startDate
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
     const query = `
-      INSERT INTO elections (title, start_time, end_time)
-      VALUES ($1, $2, $3)
+      INSERT INTO elections (title, description, start_date, end_date, status)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const values = [title, startTime, endTime];
+    const values = [title, description, start, end, status];
 
     const result = await client.query(query, values);
 
@@ -41,22 +33,33 @@ const createGeneralElection = async (req, res) => {
   }
 };
 
-//Create Positions - Delegates
-const createDelegatePositions = async (req, res) => {
-  const { positionName, numberOfSlots } = req.body;
+//Get General Elections
+const getElections = async (req, res) => {
   try {
-  } catch (error) {}
+    const electionsQuery = "SELECT * FROM elections";
+    const electionResult = await client.query(electionsQuery);
+
+    return res.status(200).json({
+      message: "Elections retrieved successfully.",
+      elections: electionResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching elections:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-//Create Positions - Executive
-const createExecutivePositions = async (req, res) => {
-  const {positionName, numberOfSlots} = req.body
+//Delete elections
+const deleteElections = async (req, res) => {
   try {
-  } catch (error) {}
-};
+    
+  } catch (error) {
+    
+  }
+}
 
 module.exports = {
+  getElections,
   createGeneralElection,
-  createDelegatePositions,
-  createExecutivePositions,
+  deleteElections,
 };

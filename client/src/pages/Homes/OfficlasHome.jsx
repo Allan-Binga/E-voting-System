@@ -89,7 +89,7 @@ function AdminHome() {
                   {dashboardData.activeElections}
                 </p>
                 <a
-                  href="/admin/elections"
+                  href="/officials/elections"
                   className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
                 >
                   View Elections
@@ -112,7 +112,7 @@ function AdminHome() {
                   {dashboardData.totalVoters}
                 </p>
                 <a
-                  href="/admin/voters"
+                  href="/officials/voters"
                   className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
                 >
                   Manage Voters
@@ -135,7 +135,7 @@ function AdminHome() {
                   {dashboardData.averageTurnout}%
                 </p>
                 <a
-                  href="/admin/results"
+                  href="/officials/results"
                   className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
                 >
                   View Results

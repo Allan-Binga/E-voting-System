@@ -5,6 +5,7 @@ import Spinner from "../../components/Spinner";
 import { User, Mail, CheckCircle, School, Hash } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../../endpoint";
+import ProfileImage from "../../assets/user.png";
 
 function CandidateProfile() {
   const [candidateProfile, setCandidateProfile] = useState(null);
@@ -13,12 +14,13 @@ function CandidateProfile() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        `${endpoint}/profiles/profile/voter/my-profile`,
+        `${endpoint}/profiles/profile/candidate/my-profile`,
         { withCredentials: true }
       );
 
-      const profileData = response.data.profile;
-      setUserProfile(profileData);
+      // Extract the first object from the profile array
+      const profileData = response.data.profile[0]; // Access the first item
+      setCandidateProfile(profileData);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     } finally {
@@ -64,9 +66,9 @@ function CandidateProfile() {
               <div className="flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-6">
                 <div className="flex-shrink-0">
                   <img
-                    src={candidateProfile.biometricImageUrl}
+                    src={ProfileImage}
                     alt="Biometric"
-                    className="w-32 h-32 rounded-md object-cover border border-gray-200"
+                    className="w-32 h-32 rounded-md object-cover "
                   />
                 </div>
 
@@ -159,12 +161,6 @@ function CandidateProfile() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-6">
-                <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-                  Edit Profile
-                </button>
               </div>
             </div>
           </div>

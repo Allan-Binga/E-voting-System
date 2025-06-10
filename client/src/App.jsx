@@ -49,7 +49,7 @@ function App() {
         <Route path="/officials/home" element={<AdminHome />} />
         <Route path="/vote-now" element={<VoteNow />} />
         <Route path="/candidate/vote-now" element={<VoteNowCandidate />} />
-        <Route path="/results" element={<ElectionResult />} />
+        <Route path="/officials/results" element={<ElectionResult />} />
         <Route path="/voter-profile" element={<VoterProfile />} />
         <Route path="/candidate-profile" element={<CandidateProfile />} />
         <Route path="/admin-profile" element={<AdminProfile />} />

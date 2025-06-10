@@ -14,6 +14,7 @@ const positionsRoute = require("./routes/positions");
 const usersRoute = require("./routes/users");
 const profileRoute = require("./routes/profile");
 const votersRoute = require("./routes/voters");
+const resultsRoute = require("./routes/results")
 
 //Import PG
 require("./config/db");
@@ -57,6 +58,8 @@ app.use("/e-voting-system/v1/position", positionsRoute);
 app.use("/e-voting-system/v1/users", usersRoute);
 app.use("/e-voting-system/v1/profiles", profileRoute);
 app.use("/e-voting-system/v1/voters", votersRoute);
+app.use("/e-voting-system/v1/results", resultsRoute)
+
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {

@@ -77,7 +77,7 @@ function AdminSidebar() {
           <span>Elections</span>
         </a>
         <a
-          href="/officials/admin-results"
+          href="/officials/results"
           className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
         >
           <ScrollText size={20} />
