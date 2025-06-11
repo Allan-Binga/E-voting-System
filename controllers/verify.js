@@ -87,7 +87,7 @@ const verifyOTP = async (req, res) => {
     });
   } catch (error) {
     console.error("Verify OTP error:", error);
-    return  res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -204,6 +204,10 @@ const verifyCandidateOTP = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
+    console.log("🔐 OTP:", otp);
+    console.log("🎯 OTP Result:", otpResult.rows);
+    console.log("🧑 Candidate ID:", otpRecord.candidate_id);
+    console.log("👀 Candidate Lookup Result:", candidateResult.rows);
 
     return res.status(200).json({
       message: "Login successful via OTP",
