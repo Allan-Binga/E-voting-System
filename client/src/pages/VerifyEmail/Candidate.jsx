@@ -82,19 +82,26 @@ function VerifyEmailCandidate() {
 
     try {
       setLoading(true);
+      console.log("🔍 Verifying OTP...");
+      console.log(
+        "👉 Endpoint:",
+        `${endpoint}/auth/verification/candidate/verify-OTP`
+      );
+      console.log("👉 Payload:", { otp: finalOtp });
+
       const response = await axios.post(
         `${endpoint}/auth/verification/candidate/verify-OTP`,
         { otp: finalOtp },
         { withCredentials: true }
       );
-      setSuccess("OTP Verification successful!");
 
+      setSuccess("OTP Verification successful!");
       setTimeout(() => navigate("/application/apply"), 2000);
     } catch (err) {
       const msg =
         err.response?.data?.message || "Invalid OTP. Please try again.";
       setError(msg);
-      setIsInvalidOtp(true); // Set invalid state for red focus ring
+      setIsInvalidOtp(true);
       if (msg.toLowerCase().includes("expired")) {
         setShowResendModal(true);
       }
