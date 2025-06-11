@@ -26,28 +26,39 @@ function Voters() {
   const getVoters = async () => {
     try {
       const response = await axios.get(`${endpoint}/users/voters`);
-      const votersData = response.data.voters;
-
+      // console.log("API Response:", response.data); // Debug
+      const votersData = Array.isArray(response.data.users)
+        ? response.data.users
+        : [];
+      if (votersData.length === 0) {
+        console.warn("No users found in response");
+        setVoters([]);
+        setLoading(false);
+        return;
+      }
       const normalized = votersData.map((voter) => ({
-        id: voter.user_id,
-        firstName: voter.first_name,
-        lastName: voter.last_name,
-        email: voter.email,
-        registrationNumber: voter.registration_number,
-        faculty: voter.faculty,
-        status: voter.status,
-        votingStatus: voter.voting_status,
-        capturedImage: voter.captured_image,
+        id: voter.user_id || "",
+        firstName: voter.first_name || "",
+        lastName: voter.last_name || "",
+        email: voter.email || "",
+        registrationNumber: voter.registration_number || "",
+        faculty: voter.faculty || "",
+        status: voter.status || "Inactive",
+        votingStatus: voter.voting_status || "",
+        capturedImage: voter.captured_image || ProfileImage,
       }));
-
       setVoters(normalized);
     } catch (error) {
-      console.error("Failed to fetch voters:", error);
+      console.error(
+        "Failed to fetch voters:",
+        error.message,
+        error.response?.data
+      );
+      setVoters([]);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     getVoters();
   }, []);
@@ -169,17 +180,22 @@ function Voters() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
+
       <div className="flex flex-1">
-        <AdminSidebar />
-        <main className="ml-64 p-6 flex-1">
-          <div className="max-w-4xl mx-auto">
+        <div>
+          <AdminSidebar />
+        </div>
+
+        <main className="w-full md:ml-64 p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto w-full">
             <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
               <Users size={24} className="text-gray-500" />
               <span>Voters</span>
             </h1>
 
+            {/* Search & Filters */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4 mb-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center space-x-2 w-full md:w-1/2">
                   <Search size={20} className="text-gray-500" />
                   <input
@@ -190,7 +206,7 @@ function Voters() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-wrap gap-4">
                   <div className="flex items-center space-x-2">
                     <Filter size={16} className="text-gray-500" />
                     <select
@@ -210,7 +226,7 @@ function Voters() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-3 py-2 border  border-gray-200 rounded-md text-gray-600 text-sm"
+                      className="px-3 py-2 border border-gray-200 rounded-md text-gray-600 text-sm"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Active">Active</option>
@@ -219,6 +235,7 @@ function Voters() {
                   </div>
                 </div>
               </div>
+
               <div className="mt-4 flex items-center space-x-2">
                 <Filter size={16} className="text-gray-500" />
                 <select
@@ -232,24 +249,35 @@ function Voters() {
               </div>
             </div>
 
+            {/* Data Table */}
             {loading ? (
               <div className="text-center mt-8 text-gray-500">
                 Loading voters...
               </div>
             ) : (
               <>
-                <div className="bg-white border border-gray-100 shadow-sm rounded-lg overflow-hidden">
-                  <table className="w-full table-auto">
+                <div className="bg-white border border-gray-100 shadow-sm rounded-lg overflow-x-auto">
+                  <table className="min-w-full table-auto">
                     <thead>
                       <tr className="bg-gray-100 text-gray-600 text-sm font-medium">
-                        <th className="px-4 py-3 text-left">Name</th>
-                        <th className="px-4 py-3 text-left">Email</th>
-                        <th className="px-4 py-3 text-left">
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
                           Registration Number
                         </th>
-                        <th className="px-4 py-3 text-left">Faculty</th>
-                        <th className="px-4 py-3 text-left">Status</th>
-                        <th className="px-4 py-3 text-left">Actions</th>
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
+                          Faculty
+                        </th>
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left whitespace-nowrap">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -287,7 +315,7 @@ function Voters() {
                               <span>{voter.status}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3 space-x-2">
+                          <td className="px-4 py-3 space-x-2 whitespace-nowrap">
                             <button
                               onClick={() => openUpdateModal(voter)}
                               className="px-3 py-1 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
@@ -324,64 +352,29 @@ function Voters() {
         </main>
       </div>
 
-      {/* Update Modal */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Update Voter</h2>
             <form onSubmit={updateVoter}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={updateForm.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={updateForm.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Faculty
-                </label>
-                <input
-                  type="text"
-                  name="faculty"
-                  value={updateForm.faculty}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Registration Number
-                </label>
-                <input
-                  type="text"
-                  name="registrationNumber"
-                  value={updateForm.registrationNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md"
-                  required
-                />
-              </div>
+              {["firstName", "lastName", "faculty", "registrationNumber"].map(
+                (field) => (
+                  <div key={field} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 capitalize">
+                      {field.replace(/([A-Z])/g, " $1")}
+                    </label>
+                    <input
+                      type="text"
+                      name={field}
+                      value={updateForm[field]}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                      required
+                    />
+                  </div>
+                )
+              )}
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"

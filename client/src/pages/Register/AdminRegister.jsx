@@ -142,7 +142,7 @@ function AdminRegister() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="John"
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 {fieldErrors.firstName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -161,7 +161,7 @@ function AdminRegister() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 {fieldErrors.lastName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -181,7 +181,7 @@ function AdminRegister() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@gmail.com"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               {fieldErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
@@ -206,7 +206,7 @@ function AdminRegister() {
                 } rounded-full shadow-sm py-2.5 px-4 text-sm focus:outline-none focus:ring-2 ${
                   fieldErrors.password
                     ? "focus:ring-red-500"
-                    : "focus:ring-blue-500"
+                    : "focus:ring-green-500"
                 }`}
               />
               <span
@@ -238,7 +238,7 @@ function AdminRegister() {
             Already have an account?{" "}
             <Link
               to="/officials/login"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Login Here
             </Link>
@@ -247,7 +247,7 @@ function AdminRegister() {
             Potential candidate?{" "}
             <Link
               to="/candidate/registration"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Click here
             </Link>

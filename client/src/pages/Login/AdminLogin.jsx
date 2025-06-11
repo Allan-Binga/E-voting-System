@@ -69,7 +69,7 @@ function AdminLogin() {
       if (errorMessage?.includes("already logged in")) {
         toast.info("You are already logged in.", {
           className:
-            "bg-blue-100 text-blue-800 font-medium rounded-md p-3 shadow",
+            "bg-green-100 text-green-800 font-medium rounded-md p-3 shadow",
         });
         navigate("/officials/home");
       } else {
@@ -167,7 +167,7 @@ function AdminLogin() {
             Don't have an account?{" "}
             <Link
               to="/officials/register"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Register here
             </Link>
@@ -177,7 +177,7 @@ function AdminLogin() {
             Potential candidate?{" "}
             <Link
               to="/candidate/registration"
-              className="text-blue-600 hover:underline font-medium"
+              className="text-green-600 hover:underline font-medium"
             >
               Click here
             </Link>

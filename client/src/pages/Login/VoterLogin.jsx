@@ -204,7 +204,7 @@ function VoterLogin() {
           className:
             "bg-green-100 text-green-800 font-medium rounded-md p-3 shadow",
         });
-        navigate("/home");
+        navigate("/vote-now");
       } else {
         setError(error.message || "Something went wrong.");
         toast.error(error.message || "Something went wrong.");

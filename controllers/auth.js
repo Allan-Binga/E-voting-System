@@ -199,7 +199,7 @@ const loginVoter = async (req, res) => {
         name: `${user.first_name} ${user.last_name}`,
       },
       process.env.JWT_SECRET || "defaultSecret",
-      { expiresIn: "2h" }
+      { expiresIn: "24h" }
     );
 
     //Set the cookie

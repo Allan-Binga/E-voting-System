@@ -1,12 +1,12 @@
 import Navbar from "../../components/Navbar";
-import CandidateSidebar from "../../components/CandidateSidebar";
+import Sidebar from "../../components/Sidebar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { endpoint } from "../../endpoint";
 import Spinner from "../../components/Spinner";
 import { Trophy } from "lucide-react";
 
-function CandidateResult() {
+function VoterResults() {
   const [results, setResults] = useState([]);
   const [winner, setWinner] = useState("");
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ function CandidateResult() {
       <Navbar />
       <div className="flex flex-1">
         <div className="hidden md:block">
-          <CandidateSidebar />
+          <Sidebar/>
         </div>
 
         <main className="ml-0 md:ml-64 p-6 flex-1">
@@ -97,4 +97,4 @@ function CandidateResult() {
   );
 }
 
-export default CandidateResult;
+export default VoterResults;

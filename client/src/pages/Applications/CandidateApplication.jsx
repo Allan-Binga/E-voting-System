@@ -170,7 +170,7 @@ function CandidateApplication() {
             <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Users className="text-blue-600" />
+                  <Users className="text-green-600" />
                   <h2 className="text-xl font-semibold text-gray-800">
                     Apply as a Delegate
                   </h2>
@@ -188,7 +188,7 @@ function CandidateApplication() {
               </div>
               <button
                 onClick={() => setDelegatesModal(true)}
-                className="mt-4 w-fit bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="mt-4 w-fit bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
                 disabled={
                   positions.delegates_positions === 0 || hasRecentlyApplied
                 }
@@ -216,10 +216,10 @@ function CandidateApplication() {
                 </p>
               </div>
               <button
-                onClick={() => setDelegatesModal(true)}
-                className="mt-4 w-fit bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={() => setExecutiveModal(true)}
+                className="mt-4 w-fit bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
                 disabled={
-                  positions.delegates_positions === 0 || hasRecentlyApplied
+                  positions.executive_positions === 0 || hasRecentlyApplied
                 }
               >
                 Apply Now
@@ -271,7 +271,7 @@ function CandidateApplication() {
                   </button>
                   <button
                     onClick={applyDelegates}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
                   >
                     Submit
                   </button>

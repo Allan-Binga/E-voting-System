@@ -3,16 +3,21 @@ const client = require("../config/db");
 //Fetch Voters
 const getVoters = async (req, res) => {
   try {
-    //Voters
-    const votersQuery = "SELECT * FROM users";
-    const result = await client.query(votersQuery);
+    // Fetch candidates
+    const candidatesQuery = "SELECT * FROM candidates";
+    const candidatesResult = await client.query(candidatesQuery);
+
+    // Fetch users
+    const usersQuery = "SELECT * FROM users";
+    const usersResult = await client.query(usersQuery);
 
     return res.status(200).json({
-      message: "Registered voters.",
-      voters: result.rows,
+      message: "Fetched voters, candidates, and users.",
+      candidates: candidatesResult.rows,
+      users: usersResult.rows,
     });
   } catch (error) {
-    console.error("Error fetching voters:", error);
+    console.error("Error fetching data:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -39,4 +44,4 @@ const getAdmins = async (req, res) => {
   }
 };
 
-module.exports = { getVoters, getCandidates , getAdmins};
+module.exports = { getVoters, getCandidates, getAdmins };

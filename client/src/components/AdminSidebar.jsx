@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 function AdminSidebar() {
+  
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -43,42 +44,42 @@ function AdminSidebar() {
       <nav className="flex flex-col gap-4 text-gray-600 font-medium">
         <a
           href="/officials/home"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <LayoutDashboard size={20} />
           <span>Home</span>
         </a>
         <a
           href="/officials/applications"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <File size={20} />
           <span>Applications</span>
         </a>
         <a
           href="/officials/voters"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <Users size={20} />
           <span>Voters</span>
         </a>
         <a
           href="/officials/candidates"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <UserPlus size={20} />
           <span>Candidates</span>
         </a>
         <a
           href="/officials/elections"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <ListChecks size={20} />
           <span>Elections</span>
         </a>
         <a
           href="/officials/results"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <ScrollText size={20} />
           <span>Election Results</span>

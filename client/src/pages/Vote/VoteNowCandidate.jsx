@@ -161,12 +161,17 @@ function VoteNow() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
-      <CandidateSidebar />
+
+      {/* Sidebar hidden on small screens */}
+      <div className="hidden md:block">
+        <CandidateSidebar />
+      </div>
+
       <main className="flex flex-1 justify-center items-center p-4">
         {loading ? (
           <Spinner />
         ) : votingStatus.delegateVoted && votingStatus.executiveVoted ? (
-          <div className="bg-white shadow-lg rounded-xl p-6 max-w-md text-center border border-green-200">
+          <div className="bg-white shadow-lg rounded-xl p-6 max-w-md w-full text-center border border-green-200">
             <div className="flex flex-col items-center justify-center space-y-4">
               <svg
                 className="w-16 h-16 text-green-500"
@@ -189,17 +194,17 @@ function VoteNow() {
               </p>
               <button
                 onClick={handleLogout}
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 cursor-pointer"
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
               >
                 Logout
               </button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Card 1: Vote for Delegates */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">
+            {/* Delegate Card */}
             <div
-              className={`w-64 h-64 bg-white shadow-md rounded-xl flex flex-col items-center justify-center transition border border-gray-200 ${
+              className={`w-full aspect-square bg-white shadow-md rounded-xl flex flex-col items-center justify-center transition border border-gray-200 ${
                 votingStatus.delegateVoted
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:shadow-lg cursor-pointer"
@@ -216,9 +221,10 @@ function VoteNow() {
                 <p className="text-sm text-green-600 mt-2">Voted</p>
               )}
             </div>
-            {/* Card 2: Vote for Executives */}
+
+            {/* Executive Card */}
             <div
-              className={`w-64 h-64 bg-white shadow-md rounded-xl flex flex-col items-center justify-center transition border border-gray-200 ${
+              className={`w-full aspect-square bg-white shadow-md rounded-xl flex flex-col items-center justify-center transition border border-gray-200 ${
                 votingStatus.executiveVoted
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:shadow-lg cursor-pointer"
@@ -239,15 +245,16 @@ function VoteNow() {
         )}
       </main>
 
-      {/* Candidates Modal (Delegates or Executives) */}
+      {/* Modal */}
       {(delegatesModal || executivesModal) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-xl w-full max-w-3xl">
             <h2 className="text-2xl font-bold mb-4 text-center">
               Select a {delegatesModal ? "Delegate" : "Executive"} to Vote For
             </h2>
             {error && <p className="text-red-500 mb-4">{error}</p>}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
               {(delegatesModal ? delegates : executives).length === 0 ? (
                 <p>
                   No {delegatesModal ? "delegates" : "executives"} available.
@@ -279,6 +286,7 @@ function VoteNow() {
                 ))
               )}
             </div>
+
             <div className="mt-6 flex justify-end gap-4">
               <button
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"

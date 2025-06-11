@@ -44,7 +44,7 @@ function VoterProfile() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <Spinner />
       </div>
     );
@@ -52,8 +52,10 @@ function VoterProfile() {
 
   if (!userProfile) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-600">Failed to load profile.</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-red-600 text-center text-sm sm:text-base">
+          Failed to load profile.
+        </p>
       </div>
     );
   }
@@ -65,40 +67,40 @@ function VoterProfile() {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <div className="hidden md:block">
+        <div className="hidden md:block md:w-64">
           <Sidebar />
         </div>
 
         {/* Main Content */}
-        <main className="ml-64 p-6 flex-1">
-          <div className="max-w-3xl mx-auto">
+        <main className="flex-1 p-4 sm:p-6 md:ml-64">
+          <div className="max-w-full sm:max-w-3xl mx-auto">
             {/* Page Header */}
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
               Voter Profile
             </h1>
 
             {/* Profile Card */}
-            <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6">
-              <div className="flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-6">
+            <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6">
                 {/* Biometric Image */}
                 <div className="flex-shrink-0">
                   <img
                     src={ProfileImage}
                     alt="Biometric Profile"
-                    className="w-30 h-30 rounded-md object-cover"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-md object-cover"
                   />
                 </div>
 
                 {/* Voter Details */}
                 <div className="flex-1 w-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Detail Item */}
                     {[
                       {
                         label: "First Name",
                         icon: (
                           <User
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -108,7 +110,7 @@ function VoterProfile() {
                         label: "Last Name",
                         icon: (
                           <User
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -118,7 +120,7 @@ function VoterProfile() {
                         label: "Email",
                         icon: (
                           <Mail
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -128,7 +130,7 @@ function VoterProfile() {
                         label: "Status",
                         icon: (
                           <CheckCircle
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -148,7 +150,7 @@ function VoterProfile() {
                         label: "Faculty",
                         icon: (
                           <School
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -158,7 +160,7 @@ function VoterProfile() {
                         label: "Registration Number",
                         icon: (
                           <Hash
-                            size={20}
+                            size={18}
                             className="text-gray-500 flex-shrink-0"
                           />
                         ),
@@ -171,10 +173,10 @@ function VoterProfile() {
                       >
                         {item.icon}
                         <div className="min-w-0">
-                          <label className="text-sm font-medium text-gray-500">
+                          <label className="text-xs sm:text-sm font-medium text-gray-500">
                             {item.label}
                           </label>
-                          <p className="text-gray-800 font-medium break-words truncate max-w-xs">
+                          <p className="text-gray-800 font-medium text-sm sm:text-base break-words">
                             {item.value || "N/A"}
                           </p>
                         </div>
@@ -184,12 +186,12 @@ function VoterProfile() {
                 </div>
               </div>
 
-              {/* Edit Button */}
-              <div className="mt-6">
-                <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+              {/* Edit Button (Commented out, but keeping responsive styles) */}
+              {/* <div className="mt-4 sm:mt-6">
+                <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors w-full sm:w-auto">
                   Edit Profile
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </main>

@@ -300,6 +300,58 @@ const sendVoteStatusEmail = async (email, voter_status) => {
   }
 };
 
+// Send Winner Email
+const sendWinnerEmail = async (email, candidateName) => {
+  const subject = "Congratulations on Your Election Victory!";
+
+  const messageBody = `
+    <p style="font-size: 16px; line-height: 1.5;">
+      Dear ${candidateName},<br><br>
+      We are thrilled to inform you that you have won the election! Your dedication and support from voters have led to this well-deserved victory. Thank you for participating in the Multimedia e-Voting System.
+    </p>
+    <p style="font-size: 16px; line-height: 1.5;">
+      Please contact our team for the next steps regarding your victory and any official proceedings.
+    </p>
+  `;
+
+  const mailOptions = {
+    from: `"Multimedia e-Voting Management System" <${process.env.MAIL_USER}>`,
+    to: email,
+    subject,
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f7fa; color: #333;">
+        <!-- Header -->
+        <div style="background-color: #1a73e8; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Multimedia e-Voting System</h1>
+        </div>
+        <!-- Body -->
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="font-size: 20px; color: #1a73e8;">Congratulations, ${candidateName}!</h2>
+          ${messageBody}
+          <div style="text-align: center; margin: 20px 0;">
+           
+          </div>
+          <p style="font-size: 14px; color: #666; line-height: 1.5;">If you have any questions, please reach out to our support team.</p>
+        </div>
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+          <p>Multimedia e-Voting System Team</p>
+          <p>Nairobi, Kenya</p>
+          <p><a href="#" style="color: #1a73e8; text-decoration: none;">Contact Support</a> | <a href="#" style="color: #1a73e8; text-decoration: none;">Unsubscribe</a></p>
+          <p>© ${new Date().getFullYear()} Multimedia e-Voting System. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending winner email:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendOTPEmail,
@@ -307,4 +359,5 @@ module.exports = {
   sendAdminApplicationApprovalEmail,
   sendApprovalOrRejectionEmail,
   sendVoteStatusEmail,
+  sendWinnerEmail,
 };

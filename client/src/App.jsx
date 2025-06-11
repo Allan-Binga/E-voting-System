@@ -31,6 +31,7 @@ import VerifyEmailUser from "./pages/VerifyEmail/User";
 import VerifyEmailAdmin from "./pages/VerifyEmail/Admin";
 import VerifyEmailCandidate from "./pages/VerifyEmail/Candidate";
 import OfficialsApplications from "./pages/Applications/OfficialsApplications";
+import VoterResults from "./pages/Results/Voter";
 
 function App() {
   return (
@@ -55,10 +56,14 @@ function App() {
         <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/admin-results" element={<AdminResults />} />
         <Route path="/candidate-results" element={<CandidateResult />} />
+        <Route path="/results" element={<VoterResults />} />
         <Route path="/officials/elections" element={<Election />} />
         <Route path="/officials/voters" element={<Voters />} />
         <Route path="/officials/candidates" element={<Candidates />} />
-         <Route path="/officials/applications" element={<OfficialsApplications />} />
+        <Route
+          path="/officials/applications"
+          element={<OfficialsApplications />}
+        />
         <Route path="/user/verify-email" element={<VerifyEmailUser />} />
         <Route path="/official/verify-email" element={<VerifyEmailAdmin />} />
         <Route
@@ -69,7 +74,7 @@ function App() {
 
       {/* Global ToastContainer */}
       <ToastContainer
-        position="top-center"
+        position="top-right"
         autoClose={4000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -80,6 +85,9 @@ function App() {
         pauseOnHover={false}
         theme="light"
         transition={Slide}
+        toastClassName="bg-white rounded-lg shadow-lg border border-green-200 p-4 sm:p-6 max-w-xs sm:max-w-sm mx-auto"
+        bodyClassName="text-sm sm:text-base text-gray-800 font-medium"
+        progressClassName="bg-green-600 h-1 rounded-full"
       />
     </Router>
   );

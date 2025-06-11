@@ -113,9 +113,14 @@ function OfficialsApplications() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
+
       <div className="flex flex-1">
-        <AdminSidebar />
-        <main className="ml-64 p-6 flex-1">
+        {/* Sidebar - show only on medium and up */}
+        <div className="hidden sm:block">
+          <AdminSidebar />
+        </div>
+
+        <main className="flex-1 p-4 sm:ml-64">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
               <Users size={24} className="text-gray-500" aria-hidden="true" />

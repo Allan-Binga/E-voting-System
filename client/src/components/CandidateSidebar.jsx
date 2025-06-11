@@ -38,28 +38,28 @@ function CandidateSidebar() {
       <nav className="flex flex-col gap-4 text-gray-600 font-medium">
         <a
           href="/application/apply"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <FileText size={20} />
           <span>Applications</span>
         </a>
         <a
           href="/candidate/vote-now"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <Vote size={20} />
           <span>Vote Now</span>
         </a>
         <a
           href="/candidate-results"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <ScrollText size={20} />
           <span>Election Results</span>
         </a>
         <a
           href="/candidate-profile"
-          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <User size={20} />
           <span>Profile</span>

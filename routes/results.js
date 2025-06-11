@@ -1,5 +1,14 @@
-const express = require("express")
+const express = require("express");
+const {
+  getResults,
+  tallyResults,
+  announceWinner,
+} = require("../controllers/results");
 
-const router = express.Router()
+const router = express.Router();
 
-module.exports = router
+router.post("/tally-results", tallyResults);
+router.get("/all-results", getResults);
+router.post("/announce-winner", announceWinner);
+
+module.exports = router;

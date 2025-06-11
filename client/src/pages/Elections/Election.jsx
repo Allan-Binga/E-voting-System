@@ -49,16 +49,15 @@ function Elections() {
         withCredentials: true,
       });
       const electionsData = response.data.elections || [];
-
+      console.log("Elections Data:", electionsData); // Debug
       const normalized = electionsData.map((election) => ({
-        id: election.election_id,
+        id: election.election_id || "", // Fallback if election_id is missing
         title: election.title || "",
         description: election.description || "",
         startDate: formatDate(election.start_date),
         endDate: formatDate(election.end_date),
         status: election.status || "Upcoming",
       }));
-
       setElections(normalized);
     } catch (error) {
       console.error("Failed to fetch elections:", error);
@@ -86,12 +85,6 @@ function Elections() {
   const handleAddInputChange = (e) => {
     const { name, value } = e.target;
     setNewElection((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle form input changes for edit modal
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Add Election
@@ -140,93 +133,15 @@ function Elections() {
     }
   };
 
-  // Update Election
-  const updateElection = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.patch(
-        `${endpoint}/election/update-election/${selectedElection.id}`,
-        {
-          title: editForm.title,
-          description: editForm.description,
-          startDate: editForm.startDate,
-          endDate: editForm.endDate,
-          status: editForm.status,
-        },
-        { withCredentials: true }
-      );
-
-      setElections((prev) =>
-        prev.map((election) =>
-          election.id === selectedElection.id
-            ? {
-                ...election,
-                title: editForm.title,
-                description: editForm.description,
-                startDate: editForm.startDate,
-                endDate: editForm.endDate,
-                status: editForm.status,
-              }
-            : election
-        )
-      );
-
-      setShowEditModal(false);
-      toast.success("Election updated successfully!");
-    } catch (error) {
-      console.error("Failed to update election:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to update election."
-      );
-    }
-  };
-
-  // Delete Election
-  const deleteElection = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this election?"))
-      return;
-
-    try {
-      await axios.delete(`${endpoint}/election/delete-election/${id}`, {
-        withCredentials: true,
-      });
-
-      setElections((prev) => prev.filter((election) => election.id !== id));
-      setShowDetailsModal(false);
-      toast.success("Election deleted successfully!");
-    } catch (error) {
-      console.error("Failed to delete election:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to delete election."
-      );
-    }
-  };
-
-  // Open Details Modal
-  const openDetailsModal = (election) => {
-    setSelectedElection(election);
-    setShowDetailsModal(true);
-  };
-
-  // Open Edit Modal
-  const openEditModal = () => {
-    setEditForm({
-      title: selectedElection.title,
-      description: selectedElection.description,
-      startDate: selectedElection.startDate,
-      endDate: selectedElection.endDate,
-      status: selectedElection.status,
-    });
-    setShowDetailsModal(false);
-    setShowEditModal(true);
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-1">
-        <AdminSidebar />
-        <main className="ml-64 p-6 flex-1">
+        <div className="hidden md:block">
+          <AdminSidebar />
+        </div>
+
+        <main className="ml-0 md:ml-64 p-4 sm:p-6 flex-1">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
               <Vote size={24} className="text-gray-500" aria-hidden="true" />
@@ -236,7 +151,7 @@ function Elections() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-4 md:mb-0"
+                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2 mb-4 md:mb-0 cursor-pointer"
               >
                 <Plus size={16} aria-hidden="true" />
                 <span>Add Election</span>
@@ -251,7 +166,7 @@ function Elections() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     <option value="All">All Statuses</option>
                     <option value="Upcoming">Upcoming</option>
@@ -268,7 +183,7 @@ function Elections() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     <option value="date">Sort by Date</option>
                     <option value="title">Sort by Title</option>
@@ -287,7 +202,7 @@ function Elections() {
                   {filteredElections.map((election) => (
                     <div
                       key={election.id}
-                      className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-blue-50 transition-colors"
+                      className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-green-50 transition-colors"
                     >
                       <div>
                         <h3 className="text-md font-medium text-gray-800 flex items-center space-x-2">
@@ -310,7 +225,7 @@ function Elections() {
                             election.status === "Completed"
                               ? "text-green-600"
                               : election.status === "Ongoing"
-                              ? "text-blue-600"
+                              ? "text-green-600"
                               : "text-yellow-600"
                           }`}
                         >
@@ -320,21 +235,12 @@ function Elections() {
                       <div className="flex space-x-2 mt-4 md:mt-0">
                         <button
                           onClick={() => openDetailsModal(election)}
-                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                          className="px-3 py-1 text-sm font-medium text-green-600 hover:text-green-800 flex items-center space-x-1"
                         >
                           <Info size={16} aria-hidden="true" />
                           <span>Details</span>
                         </button>
-                        <button
-                          onClick={() => {
-                            setSelectedElection(election);
-                            openEditModal();
-                          }}
-                          className="px-3 py-1 text-sm font-medium bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 flex items-center space-x-1"
-                        >
-                          <Edit size={16} aria-hidden="true" />
-                          <span>Edit</span>
-                        </button>
+
                         <button
                           onClick={() => deleteElection(election.id)}
                           className="px-3 py-1 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center space-x-1"
@@ -377,7 +283,7 @@ function Elections() {
                         name="title"
                         value={newElection.title}
                         onChange={handleAddInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -389,7 +295,7 @@ function Elections() {
                         name="description"
                         value={newElection.description}
                         onChange={handleAddInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         rows={3}
                       />
                     </div>
@@ -402,7 +308,7 @@ function Elections() {
                         name="startDate"
                         value={newElection.startDate}
                         onChange={handleAddInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -415,7 +321,7 @@ function Elections() {
                         name="endDate"
                         value={newElection.endDate}
                         onChange={handleAddInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -427,7 +333,7 @@ function Elections() {
                         name="status"
                         value={newElection.status}
                         onChange={handleAddInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <option value="Upcoming">Upcoming</option>
                         <option value="Ongoing">Ongoing</option>
@@ -437,7 +343,7 @@ function Elections() {
                     <div className="flex space-x-2">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                       >
                         Add Election
                       </button>
@@ -478,7 +384,7 @@ function Elections() {
                       selectedElection.status === "Completed"
                         ? "text-green-600"
                         : selectedElection.status === "Ongoing"
-                        ? "text-blue-600"
+                        ? "text-green-600"
                         : "text-yellow-600"
                     }`}
                   >
@@ -487,7 +393,7 @@ function Elections() {
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={openEditModal}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
                     >
                       Edit
                     </button>
@@ -530,7 +436,7 @@ function Elections() {
                         name="title"
                         value={editForm.title}
                         onChange={handleEditInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -542,7 +448,7 @@ function Elections() {
                         name="description"
                         value={editForm.description}
                         onChange={handleEditInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         rows={3}
                       />
                     </div>
@@ -555,7 +461,7 @@ function Elections() {
                         name="startDate"
                         value={editForm.startDate}
                         onChange={handleEditInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -568,7 +474,7 @@ function Elections() {
                         name="endDate"
                         value={editForm.endDate}
                         onChange={handleEditInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         required
                       />
                     </div>
@@ -580,7 +486,7 @@ function Elections() {
                         name="status"
                         value={editForm.status}
                         onChange={handleEditInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <option value="Upcoming">Upcoming</option>
                         <option value="Ongoing">Ongoing</option>
@@ -590,7 +496,7 @@ function Elections() {
                     <div className="flex space-x-2">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                       >
                         Update Election
                       </button>
