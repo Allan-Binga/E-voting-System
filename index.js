@@ -14,7 +14,7 @@ const positionsRoute = require("./routes/positions");
 const usersRoute = require("./routes/users");
 const profileRoute = require("./routes/profile");
 const votersRoute = require("./routes/voters");
-const resultsRoute = require("./routes/results")
+const resultsRoute = require("./routes/results");
 
 //Import PG
 require("./config/db");
@@ -27,7 +27,10 @@ const app = express();
 app.use(express.json());
 
 //CORS implementation
-const allowedOrigins = ["http://localhost:5173"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-voting-system-9ee3a91d16bb.herokuapp.com",
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -58,8 +61,7 @@ app.use("/e-voting-system/v1/position", positionsRoute);
 app.use("/e-voting-system/v1/users", usersRoute);
 app.use("/e-voting-system/v1/profiles", profileRoute);
 app.use("/e-voting-system/v1/voters", votersRoute);
-app.use("/e-voting-system/v1/results", resultsRoute)
-
+app.use("/e-voting-system/v1/results", resultsRoute);
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {
