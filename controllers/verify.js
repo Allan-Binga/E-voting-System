@@ -204,10 +204,10 @@ const verifyCandidateOTP = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-    console.log("🔐 OTP:", otp);
-    console.log("🎯 OTP Result:", otpResult.rows);
-    console.log("🧑 Candidate ID:", otpRecord.candidate_id);
-    console.log("👀 Candidate Lookup Result:", candidateResult.rows);
+    // console.log("🔐 OTP:", otp);
+    // console.log("🎯 OTP Result:", otpResult.rows);
+    // console.log("🧑 Candidate ID:", otpRecord.candidate_id);
+    // console.log("👀 Candidate Lookup Result:", candidateResult.rows);
 
     return res.status(200).json({
       message: "Login successful via OTP",
