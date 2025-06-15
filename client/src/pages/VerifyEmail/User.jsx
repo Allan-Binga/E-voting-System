@@ -86,7 +86,7 @@ function VerifyEmailUser() {
         { withCredentials: true }
       );
       setSuccess("OTP Verification successful!");
-      setTimeout(() => navigate("/voter/home"), 2000);
+      setTimeout(() => navigate("/vote-now"), 2000);
     } catch (err) {
       const msg =
         err.response?.data?.message || "Invalid OTP. Please try again.";

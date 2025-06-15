@@ -33,14 +33,29 @@ const getCandidates = async (req, res) => {
 
 //Register Candidate
 const registerCandidate = async (req, res) => {
-  const { firstName, lastName, email, biometricData, faculty } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    biometricData,
+    faculty,
+    registrationNumber,
+  } = req.body;
 
-  if (!firstName || !lastName || !email || !biometricData || !faculty) {
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !biometricData ||
+    !faculty ||
+    !registrationNumber
+  ) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
   const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{4}$/; // e.g., CIT-831-2025
 
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
@@ -59,6 +74,13 @@ const registerCandidate = async (req, res) => {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
+  if (!regNoRegex.test(registrationNumber)) {
+    return res.status(400).json({
+      message:
+        "Invalid registration number format. Use format: CODE-123-2025 (e.g., CIT-831-2025)",
+    });
+  }
+
   // Faculty code mapping
   const facultyCodes = {
     "Business & Economics": "BUS",
@@ -72,6 +94,13 @@ const registerCandidate = async (req, res) => {
   const facultyCode = facultyCodes[faculty];
   if (!facultyCode) {
     return res.status(400).json({ message: "Invalid faculty selection." });
+  }
+
+  const regNoParts = registrationNumber.split("-");
+  if (regNoParts[0] !== facultyCode) {
+    return res.status(400).json({
+      message: `Registration number prefix (${regNoParts[0]}) does not match selected faculty code (${facultyCode}).`,
+    });
   }
 
   try {
@@ -89,8 +118,8 @@ const registerCandidate = async (req, res) => {
 
     // Insert candidate without admission number
     const insertCandidateQuery = `
-      INSERT INTO candidates (first_name, last_name, email, faculty, biometric_data)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO candidates (first_name, last_name, email, faculty, biometric_data, registration_number)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING candidate_id
     `;
     const insertResult = await client.query(insertCandidateQuery, [
@@ -99,18 +128,8 @@ const registerCandidate = async (req, res) => {
       email,
       faculty,
       buffer,
+      registrationNumber,
     ]);
-
-    const candidateId = insertResult.rows[0].candidate_id;
-    const admissionNumber = `CAND-${facultyCode}-${candidateId}-2025`;
-
-    // Update candidate with generated admission number
-    const updateAdmissionQuery = `
-      UPDATE candidates
-      SET registration_number = $1
-      WHERE candidate_id = $2
-    `;
-    await client.query(updateAdmissionQuery, [admissionNumber, candidateId]);
 
     res
       .status(201)

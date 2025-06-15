@@ -15,16 +15,48 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
+// Cosine similarity helper
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length) return 0;
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
 //Register Voter
 const registerVoter = async (req, res) => {
-  const { firstName, lastName, email, faculty, biometricData } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    faculty,
+    biometricData,
+    registrationNumber,
+  } = req.body;
 
-  if (!firstName || !lastName || !email || !faculty || !biometricData) {
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !faculty ||
+    !biometricData ||
+    !registrationNumber
+  ) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
   const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{4}$/; // e.g., CIT-831-2025
 
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
@@ -44,7 +76,13 @@ const registerVoter = async (req, res) => {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
-  // Map faculties to codes
+  if (!regNoRegex.test(registrationNumber)) {
+    return res.status(400).json({
+      message:
+        "Invalid registration number format. Use format: CODE-123-2025 (e.g., CIT-831-2025)",
+    });
+  }
+
   const facultyCodes = {
     "Business & Economics": "BUS",
     "Engineering & Technology": "ENG",
@@ -59,7 +97,15 @@ const registerVoter = async (req, res) => {
     return res.status(400).json({ message: "Invalid faculty selection." });
   }
 
+  const regNoParts = registrationNumber.split("-");
+  if (regNoParts[0] !== facultyCode) {
+    return res.status(400).json({
+      message: `Registration number prefix (${regNoParts[0]}) does not match selected faculty code (${facultyCode}).`,
+    });
+  }
+
   try {
+    // Check if email already exists
     const checkUserQuery = "SELECT * FROM users WHERE email = $1";
     const existingUser = await client.query(checkUserQuery, [email]);
 
@@ -67,15 +113,25 @@ const registerVoter = async (req, res) => {
       return res.status(409).json({ message: "User already exists." });
     }
 
-    // Biometric similarity check
+    // Validate biometric data format
+    if (
+      !Array.isArray(biometricData) ||
+      biometricData.some((val) => typeof val !== "number")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Invalid biometric data format." });
+    }
+
+    const newEmbedding = new Float32Array(biometricData);
+
+    // Compare biometrics against existing users
     const getBiometricsQuery =
       "SELECT biometric_data FROM users WHERE biometric_data IS NOT NULL";
     const result = await client.query(getBiometricsQuery);
     const existingBiometrics = result.rows;
 
-    const threshold = 0.4;
-    const newEmbedding = new Float32Array(biometricData);
-
+    const threshold = 0.6;
     for (const row of existingBiometrics) {
       const storedBuffer = row.biometric_data;
       const storedEmbedding = new Float32Array(
@@ -94,10 +150,10 @@ const registerVoter = async (req, res) => {
 
     const buffer = Buffer.from(newEmbedding.buffer);
 
-    // Insert user (without registration number for now)
+    // Insert user
     const insertUserQuery = `
-      INSERT INTO users (first_name, last_name, email, faculty, biometric_data, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO users (first_name, last_name, email, faculty, biometric_data, registration_number, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING user_id
     `;
     const insertResult = await client.query(insertUserQuery, [
@@ -106,18 +162,14 @@ const registerVoter = async (req, res) => {
       email,
       faculty,
       buffer,
+      registrationNumber,
       "Active",
     ]);
 
     const userId = insertResult.rows[0].user_id;
-    const registrationNumber = `${facultyCode}-${userId}-2025`;
 
-    // Update registration number
-    const updateQuery = `UPDATE users SET registration_number = $1 WHERE user_id = $2`;
-    await client.query(updateQuery, [registrationNumber, userId]);
-
-    //Send Welcome email
-    await sendWelcomeEmail(firstName, lastName, email)
+    // Send welcome email
+    await sendWelcomeEmail(firstName, lastName, email);
 
     res
       .status(201)
@@ -127,23 +179,6 @@ const registerVoter = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-// Cosine similarity helper
-function cosineSimilarity(a, b) {
-  if (a.length !== b.length) return 0;
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
 
 // Login Voter
 const loginVoter = async (req, res) => {

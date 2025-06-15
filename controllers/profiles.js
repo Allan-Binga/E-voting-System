@@ -5,7 +5,7 @@ const getMyVoterProfile = async (req, res) => {
   const voterId = req.userId;
   try {
     const voterQuery =
-      "SELECT user_id, first_name, last_name, email, faculty, registration_number, voting_status, biometric_data FROM users WHERE user_id = $1";
+      "SELECT user_id, first_name, last_name, email, faculty, registration_number, voting_status, status FROM users WHERE user_id = $1";
     const voterResult = await client.query(voterQuery, [voterId]);
 
     if (voterResult.rows.length === 0) {
@@ -13,13 +13,10 @@ const getMyVoterProfile = async (req, res) => {
     }
 
     const voter = voterResult.rows[0];
-    const biometricImageUrl = voter.captured_image
-      ? `data:image/jpeg;base64,${voter.captured_image.toString("base64")}`
-      : null;
 
     return res.status(200).json({
       message: "Profile fetched.",
-      profile: { ...voter, biometricImageUrl },
+      profile: voter,
     });
   } catch (error) {
     console.error("Error fetching voter profile:", error);

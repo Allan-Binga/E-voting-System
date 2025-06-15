@@ -272,6 +272,7 @@ function VoteNow() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-lg text-center">
             <h2 className="text-xl font-bold mb-4">Face ID Verification</h2>
+
             {capturedImage && (
               <img
                 src={capturedImage}
@@ -279,6 +280,7 @@ function VoteNow() {
                 className="mt-4 rounded border"
               />
             )}
+
             <video
               ref={videoRef}
               autoPlay
@@ -287,20 +289,27 @@ function VoteNow() {
               className="w-full h-64 rounded-lg border border-gray-300"
             />
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            <button
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
-              onClick={scanFace}
-              disabled={isScanning}
-            >
-              <span>{isScanning ? "Scanning..." : "Authenticate Face ID"}</span>
-              <ScanFace className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setScanFaceModal(false)}
-              className="mt-4 text-sm text-gray-500 hover:underline"
-            >
-              Cancel
-            </button>
+
+            {/* Flex container for buttons */}
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
+                onClick={scanFace}
+                disabled={isScanning}
+              >
+                <span>
+                  {isScanning ? "Scanning..." : "Authenticate Face ID"}
+                </span>
+                <ScanFace className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setScanFaceModal(false)}
+                className="text-sm text-gray-600 border border-gray-300 px-4 py-2 rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

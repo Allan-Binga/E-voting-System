@@ -1,6 +1,7 @@
-import { Fingerprint, ScanFace } from "lucide-react";
+import { ScanFace } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
+import LoginImage from "../../assets/register.jpg"
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -12,6 +13,7 @@ function VoterRegister() {
     firstName: "",
     lastName: "",
     email: "",
+    registrationNumber: "",
     biometricData: "",
     faculty: "",
   });
@@ -70,11 +72,9 @@ function VoterRegister() {
     setError("");
     setIsScanning(true);
     setCapturedImage(null);
-    console.log("[Scan] Starting face scan...");
 
     if (!modelsLoaded) {
       setIsScanning(false);
-      console.log("[Scan] Models not loaded yet");
       return toast.info("Face recognition models are loading...");
     }
 
@@ -84,10 +84,8 @@ function VoterRegister() {
       });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
-      console.log("[Scan] Webcam stream started");
 
       videoRef.current.onloadedmetadata = async () => {
-        console.log("[Scan] Video metadata loaded, waiting for 3 seconds");
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const canvas = canvasRef.current;
@@ -105,8 +103,6 @@ function VoterRegister() {
           .withFaceLandmarks()
           .withFaceDescriptor();
 
-        console.log("[Scan] Face detection result:", detection);
-
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop());
           streamRef.current = null;
@@ -114,13 +110,11 @@ function VoterRegister() {
         setIsScanning(false);
 
         if (!detection) {
-          console.log("[Scan] No face detected");
           setCapturedImage(null);
           return toast.info("No face detected. Please try again.");
         }
 
         const descriptorArray = Array.from(detection.descriptor);
-        console.log("[Scan] Descriptor array:", descriptorArray);
         setFormData((prev) => ({
           ...prev,
           biometricData: descriptorArray,
@@ -129,7 +123,6 @@ function VoterRegister() {
         toast.success("Face scanning successful.");
       };
     } catch (error) {
-      console.error("[Scan Error]", error);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -149,11 +142,63 @@ function VoterRegister() {
     "Media & Communication",
   ];
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    const newErrors = {};
+    if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = "First name must contain only letters.";
+    }
+    if (!formData.biometricData) {
+      newErrors.biometricData = "Please scan your face before submitting.";
+    }
+    if (!formData.registrationNumber.trim()) {
+      newErrors.registrationNumber = "Registration number is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${endpoint}/auth/users/voter/register-voter`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFieldErrors({});
+        if (data.message?.toLowerCase().includes("first name")) {
+          setFieldErrors({ firstName: data.message });
+        } else if (data.message?.toLowerCase().includes("biometric")) {
+          setFieldErrors({ biometricData: data.message });
+        } else {
+          toast.error(data.message || "Something went wrong.");
+        }
+        return;
+      }
+
+      setFieldErrors({});
+      toast.success(data.message);
+      setTimeout(() => navigate("/voter/login"), 4000);
+    } catch (error) {
+      toast.error("Server error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
-        {/* Right side - Form */}
         <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
@@ -178,69 +223,7 @@ function VoterRegister() {
             <p className="text-green-600 text-sm text-center mt-4">{success}</p>
           )}
 
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setError("");
-              setSuccess("");
-              setLoading(true);
-              console.log("[Form] Submitting form data:", formData);
-
-              const newErrors = {};
-              if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
-                newErrors.firstName = "First name must contain only letters.";
-              }
-              if (!formData.biometricData) {
-                newErrors.biometricData =
-                  "Please scan your face before submitting.";
-              }
-
-              if (Object.keys(newErrors).length > 0) {
-                console.log("[Form] Validation errors:", newErrors);
-                setFieldErrors(newErrors);
-                setLoading(false);
-                return;
-              }
-
-              try {
-                const res = await fetch(
-                  `${endpoint}/auth/users/voter/register-voter`,
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
-                  }
-                );
-
-                const data = await res.json();
-                console.log("[Form] Server response:", data);
-
-                if (!res.ok) {
-                  setFieldErrors({});
-                  if (data.message?.toLowerCase().includes("first name")) {
-                    setFieldErrors({ firstName: data.message });
-                  } else if (
-                    data.message?.toLowerCase().includes("biometric")
-                  ) {
-                    setFieldErrors({ biometricData: data.message });
-                  } else {
-                    toast.error(data.message || "Something went wrong.");
-                  }
-                  return;
-                }
-
-                setFieldErrors({});
-                toast.success(data.message);
-                setTimeout(() => navigate("/voter/login"), 4000);
-              } catch (error) {
-                console.error("[Form Error]", error);
-                toast.error("Server error. Please try again.");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            className="mt-6 space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700">
@@ -297,19 +280,37 @@ function VoterRegister() {
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
               )}
             </div>
+
+            <div>
+              <label className="block text-md font-medium text-gray-700">
+                Registration Number
+              </label>
+              <input
+                type="text"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleChange}
+                placeholder="e.g. CT123-4567/2023"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              {fieldErrors.registrationNumber && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.registrationNumber}
+                </p>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Faculty
-              </label> 
+              </label>
               <select
                 name="faculty"
                 value={formData.faculty}
                 onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="" className="text-gray-800">
-                  FACULTY
-                </option>
+                <option value="">FACULTY</option>
                 {faculties.map((faculty) => (
                   <option key={faculty} value={faculty}>
                     {faculty}
@@ -323,6 +324,7 @@ function VoterRegister() {
               )}
             </div>
 
+            {/* Face scanning section */}
             <div className="text-center">
               {!isScanning && (
                 <div className="mb-2 text-sm text-gray-600">
@@ -379,18 +381,17 @@ function VoterRegister() {
               </p>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
-                  loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-                } flex items-center justify-center`}
-                disabled={loading}
-              >
-                Complete Registration
-              </button>
-            </div>
+            <button
+              type="submit"
+              className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
+                loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+              } flex items-center justify-center`}
+              disabled={loading}
+            >
+              Complete Registration
+            </button>
           </form>
+
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{" "}
             <Link
@@ -411,6 +412,7 @@ function VoterRegister() {
           </p>
         </div>
       </div>
+
       <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
