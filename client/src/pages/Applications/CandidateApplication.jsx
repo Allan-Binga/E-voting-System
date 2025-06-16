@@ -22,6 +22,16 @@ function CandidateApplication() {
   const [executiveModal, setExecutiveModal] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for submit button spinner
+
+  const faculties = [
+    "Business and Economics",
+    "Engineering and Technology",
+    "Science and Technology",
+    "Computing and Information Technology",
+    "Social Sciences and Technology",
+    "Media and Communication",
+  ];
 
   useEffect(() => {
     fetchPositions();
@@ -30,13 +40,13 @@ function CandidateApplication() {
 
   const fetchPositions = async () => {
     try {
-      const res = await axios.get(`${endpoint}/position/all-positions`, {
+      const res = await axios.get(`${endpoint}/election/get-elections`, {
         withCredentials: true,
       });
-      const latest = res.data.positions[0];
+      const latest = res.data.elections[0];
       setPositions({
-        delegates_positions: latest.delegates_positions,
-        executive_positions: latest.executive_positions,
+        delegates_positions: latest.delegates,
+        executive_positions: latest.executives,
       });
     } catch (err) {
       console.error("Failed to fetch positions", err);
@@ -63,6 +73,7 @@ function CandidateApplication() {
       setError("Please fill in all required fields.");
       return;
     }
+    setIsSubmitting(true); // Start spinner
     try {
       const response = await axios.post(
         `${endpoint}/applications/apply-delegates`,
@@ -73,18 +84,24 @@ function CandidateApplication() {
         { withCredentials: true }
       );
       setSuccess(response.data.message);
-      setDelegatesModal(false);
+      setError("");
       setApplicationData({
         facultyRepresented: "",
         manifesto: "",
         executivePositionContested: "",
       });
-      fetchPositions(); // Update available positions
-      fetchApplications(); // Refresh applications list
+      fetchPositions();
+      fetchApplications();
     } catch (error) {
       setError(
         error.response?.data?.message || "Failed to submit application."
       );
+      setSuccess("");
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => {
+        setDelegatesModal(false); // Close modal after 2 seconds
+      }, 3000);
     }
   };
 
@@ -97,6 +114,7 @@ function CandidateApplication() {
       setError("Please fill in all required fields.");
       return;
     }
+    setIsSubmitting(true); // Start spinner
     try {
       const response = await axios.post(
         `${endpoint}/applications/apply-executive`,
@@ -109,18 +127,24 @@ function CandidateApplication() {
         { withCredentials: true }
       );
       setSuccess(response.data.message);
-      setExecutiveModal(false);
+      setError("");
       setApplicationData({
         facultyRepresented: "",
         manifesto: "",
         executivePositionContested: "",
       });
-      fetchPositions(); // Update available positions
-      fetchApplications(); // Refresh applications list
+      fetchPositions();
+      fetchApplications();
     } catch (error) {
       setError(
         error.response?.data?.message || "Failed to submit application."
       );
+      setSuccess("");
+    } finally {
+      setIsSubmitting(false); // Stop spinner
+      setTimeout(() => {
+        setExecutiveModal(false); // Close modal after 2 seconds
+      }, 3000);
     }
   };
 
@@ -152,19 +176,6 @@ function CandidateApplication() {
       <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="ml-0 md:ml-64 p-6 space-y-8">
-          {/* Error/Success Messages */}
-          {(error || success) && (
-            <div
-              className={`p-4 rounded-lg ${
-                error
-                  ? "bg-red-100 text-red-700"
-                  : "bg-green-100 text-green-700"
-              }`}
-            >
-              {error || success}
-            </div>
-          )}
-
           {/* Application Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col justify-between">
@@ -235,19 +246,38 @@ function CandidateApplication() {
                   Apply as Delegate
                 </h3>
                 <div className="space-y-4">
+                  {(error || success) && (
+                    <div
+                      className={`p-4 rounded-lg ${
+                        error
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {error || success}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Faculty Represented
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="facultyRepresented"
                       value={applicationData.facultyRepresented}
                       onChange={handleInputChange}
-                      className="w-full p-1 sm:p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 focus:outline-none text-sm sm:text-base"
-                      placeholder="Enter your faculty"
-                    />
+                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 focus:outline-none text-sm sm:text-base"
+                    >
+                      <option value="" disabled>
+                        Select your faculty
+                      </option>
+                      {faculties.map((faculty, index) => (
+                        <option key={index} value={faculty}>
+                          {faculty}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Manifesto
@@ -271,9 +301,10 @@ function CandidateApplication() {
                   </button>
                   <button
                     onClick={applyDelegates}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer flex items-center gap-2"
+                    disabled={isSubmitting}
                   >
-                    Submit
+                    {isSubmitting ? <Spinner size="small" /> : "Submit"}
                   </button>
                 </div>
               </div>
@@ -288,18 +319,36 @@ function CandidateApplication() {
                   Apply for Executive
                 </h3>
                 <div className="space-y-4">
+                  {(error || success) && (
+                    <div
+                      className={`p-4 rounded-lg ${
+                        error
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {error || success}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Faculty Represented
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="facultyRepresented"
                       value={applicationData.facultyRepresented}
                       onChange={handleInputChange}
-                      className="w-full p-1 sm:p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 focus:outline-none text-sm sm:text-base"
-                      placeholder="Enter your faculty"
-                    />
+                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 focus:outline-none text-sm sm:text-base"
+                    >
+                      <option value="" disabled>
+                        Select your faculty
+                      </option>
+                      {faculties.map((faculty, index) => (
+                        <option key={index} value={faculty}>
+                          {faculty}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -344,9 +393,10 @@ function CandidateApplication() {
                   </button>
                   <button
                     onClick={applyExecutives}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                    disabled={isSubmitting}
                   >
-                    Submit
+                    {isSubmitting ? <Spinner size="small" /> : "Submit"}
                   </button>
                 </div>
               </div>
@@ -359,7 +409,7 @@ function CandidateApplication() {
               Recent Applications
             </h3>
             {loading ? (
-              <Spinner />
+              <Spinner size="small" />
             ) : applications.length === 0 ? (
               <p className="text-gray-500 bg-white italic text-center font-semibold">
                 You haven’t made any applications yet.

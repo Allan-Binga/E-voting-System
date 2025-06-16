@@ -129,14 +129,14 @@ const applyDelegates = async (req, res) => {
     ];
     await client.query(insertQuery, values);
 
-    // 5. Decrease delegate positions by 1
-    const updatePositionsQuery = `
-      UPDATE positions
-      SET delegates_positions = delegates_positions - 1
-      WHERE id = 1 AND delegates_positions > 0
-      RETURNING delegates_positions
-    `;
-    const updated = await client.query(updatePositionsQuery);
+    // 5. Decrease delegate count from the elections table
+    const updateDelegatesQuery = `
+      UPDATE elections
+      SET delegates = delegates - 1
+      WHERE delegates > 0
+      RETURNING delegates
+`;
+    const updated = await client.query(updateDelegatesQuery);
 
     if (updated.rowCount === 0) {
       return res.status(400).json({
@@ -269,10 +269,10 @@ const applyExecutive = async (req, res) => {
 
     // 8. Decrease available executive positions
     const updatePositionsQuery = `
-      UPDATE positions
-      SET executive_positions = executive_positions - 1
-      WHERE id = 1 AND executive_positions > 0
-      RETURNING executive_positions
+      UPDATE elections
+      SET executives = executives - 1
+      WHERE executives > 0
+      RETURNING executives
     `;
     const updated = await client.query(updatePositionsQuery);
 

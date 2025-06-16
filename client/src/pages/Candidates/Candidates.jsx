@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
+import Spinner from "../../components/Spinner";
 import { Users, User, Filter, Info } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../../endpoint";
@@ -97,7 +98,7 @@ function Candidates() {
   const updateCandidate = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.patch(
+      await axios.patch(
         `${endpoint}/candidates/update-candidate/${selectedCandidate.id}`,
         {
           first_name: updateForm.firstName,
@@ -130,31 +131,53 @@ function Candidates() {
       toast.success("Candidate updated successfully!");
     } catch (error) {
       console.error("Failed to update candidate:", error);
-      alert("Failed to update candidate. Please try again.");
+      toast.error("Failed to update candidate. Please try again.");
     }
   };
 
   // Delete Candidate API
   const deleteCandidate = async (candidateId) => {
-    if (!window.confirm("Are you sure you want to delete this candidate?"))
-      return;
+    toast.info(
+      ({ closeToast }) => (
+        <div className="space-y-2">
+          <p>Are you sure you want to delete this candidate?</p>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={async () => {
+                try {
+                  await axios.delete(
+                    `${endpoint}/candidates/delete-candidate/${candidateId}`,
+                    { withCredentials: true }
+                  );
 
-    try {
-      await axios.delete(
-        `${endpoint}/candidates/delete-candidate/${candidateId}`,
-        { withCredentials: true }
-      );
-
-      // Remove candidate from local state
-      setCandidates((prev) =>
-        prev.filter((candidate) => candidate.id !== candidateId)
-      );
-      setIsDetailsModalOpen(false);
-      alert("Candidate deleted successfully!");
-    } catch (error) {
-      console.error("Failed to delete candidate:", error);
-      alert("Failed to delete candidate. Please try again.");
-    }
+                  // Remove candidate from local state
+                  setCandidates((prev) =>
+                    prev.filter((candidate) => candidate.id !== candidateId)
+                  );
+                  setIsDetailsModalOpen(false);
+                  toast.dismiss(); // close confirm toast
+                  toast.success("Candidate deleted successfully!");
+                } catch (error) {
+                  console.error("Failed to delete candidate:", error);
+                  toast.dismiss(); // close confirm toast
+                  toast.error("Failed to delete candidate. Please try again.");
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+            >
+              Yes, Delete
+            </button>
+            <button
+              onClick={() => toast.dismiss()}
+              className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { autoClose: false, closeOnClick: false }
+    );
   };
 
   return (
@@ -209,8 +232,8 @@ function Candidates() {
 
             {/* Candidates */}
             {loading ? (
-              <div className="text-center text-gray-600 mt-6">
-                Loading candidates...
+              <div className="flex items-center justify-center h-[500px]">
+                <Spinner size="large" />
               </div>
             ) : (
               <>
@@ -262,8 +285,46 @@ function Candidates() {
       {/* Details Modal */}
       {isDetailsModalOpen && selectedCandidate && (
         <div className="fixed inset-0 z-50 bg-white/30 backdrop-blur-sm flex items-center justify-center px-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            {/* ...content unchanged... */}
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Candidate Details
+            </h2>
+            <div className="space-y-2">
+              <p>
+                <strong>Name:</strong> {selectedCandidate.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedCandidate.email}
+              </p>
+              <p>
+                <strong>Faculty:</strong> {selectedCandidate.faculty}
+              </p>
+              <p>
+                <strong>Registration Number:</strong>{" "}
+                {selectedCandidate.registrationNumber}
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsDetailsModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+              >
+                Close
+              </button>
+              <button
+                onClick={openUpdateModal}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm"
+              >
+                Update
+              </button>
+              <button
+                onClick={() => deleteCandidate(selectedCandidate.id)}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -271,8 +332,73 @@ function Candidates() {
       {/* Update Modal */}
       {isUpdateModalOpen && (
         <div className="fixed inset-0 z-50 bg-white/30 backdrop-blur-sm flex items-center justify-center px-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            {/* ...content unchanged... */}
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Update Candidate
+            </h2>
+            <form onSubmit={updateCandidate} className="space-y-4">
+              <input
+                type="text"
+                name="firstName"
+                value={updateForm.firstName}
+                onChange={handleInputChange}
+                placeholder="First Name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
+              />
+              <input
+                type="text"
+                name="lastName"
+                value={updateForm.lastName}
+                onChange={handleInputChange}
+                placeholder="Last Name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                value={updateForm.email}
+                onChange={handleInputChange}
+                placeholder="Email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
+              />
+              <input
+                type="text"
+                name="faculty"
+                value={updateForm.faculty}
+                onChange={handleInputChange}
+                placeholder="Faculty"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
+              />
+              <input
+                type="text"
+                name="registrationNumber"
+                value={updateForm.registrationNumber}
+                onChange={handleInputChange}
+                placeholder="Registration Number"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
+              />
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsUpdateModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

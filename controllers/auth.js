@@ -15,23 +15,6 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
-// Cosine similarity helper
-function cosineSimilarity(a, b) {
-  if (a.length !== b.length) return 0;
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
 //Register Voter
 const registerVoter = async (req, res) => {
   const {
@@ -84,12 +67,12 @@ const registerVoter = async (req, res) => {
   }
 
   const facultyCodes = {
-    "Business & Economics": "BUS",
-    "Engineering & Technology": "ENG",
-    "Science & Technology": "SCT",
-    "Computing & Information Technology": "CIT",
-    "Social Sciences & Technology": "SST",
-    "Media & Communication": "MCS",
+    "Business and Economics": "BUS",
+    "Engineering and Technology": "ENG",
+    "Science and Technology": "SCT",
+    "Computing and Information Technology": "CIT",
+    "Social Sciences and Technology": "SST",
+    "Media and Communication": "MCS",
   };
 
   const facultyCode = facultyCodes[faculty];
@@ -124,30 +107,6 @@ const registerVoter = async (req, res) => {
     }
 
     const newEmbedding = new Float32Array(biometricData);
-
-    // Compare biometrics against existing users
-    const getBiometricsQuery =
-      "SELECT biometric_data FROM users WHERE biometric_data IS NOT NULL";
-    const result = await client.query(getBiometricsQuery);
-    const existingBiometrics = result.rows;
-
-    const threshold = 0.6;
-    for (const row of existingBiometrics) {
-      const storedBuffer = row.biometric_data;
-      const storedEmbedding = new Float32Array(
-        storedBuffer.buffer,
-        storedBuffer.byteOffset,
-        storedBuffer.length / Float32Array.BYTES_PER_ELEMENT
-      );
-
-      const similarity = cosineSimilarity(newEmbedding, storedEmbedding);
-      if (similarity > threshold) {
-        return res.status(409).json({
-          message: "Biometric data already registered with another user.",
-        });
-      }
-    }
-
     const buffer = Buffer.from(newEmbedding.buffer);
 
     // Insert user

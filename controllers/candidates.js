@@ -83,12 +83,12 @@ const registerCandidate = async (req, res) => {
 
   // Faculty code mapping
   const facultyCodes = {
-    "Business & Economics": "BUS",
-    "Engineering & Technology": "ENG",
-    "Science & Technology": "SCT",
-    "Computing & Information Technology": "CIT",
-    "Social Sciences & Technology": "SST",
-    "Media & Communication": "MCS",
+    "Business and Economics": "BUS",
+    "Engineering and Technology": "ENG",
+    "Science and Technology": "SCT",
+    "Computing and Information Technology": "CIT",
+    "Social Sciences and Technology": "SST",
+    "Media and Communication": "MCS",
   };
 
   const facultyCode = facultyCodes[faculty];
@@ -118,8 +118,8 @@ const registerCandidate = async (req, res) => {
 
     // Insert candidate without admission number
     const insertCandidateQuery = `
-      INSERT INTO candidates (first_name, last_name, email, faculty, biometric_data, registration_number)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO candidates (first_name, last_name, email, faculty, biometric_data, registration_number, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING candidate_id
     `;
     const insertResult = await client.query(insertCandidateQuery, [
@@ -129,11 +129,10 @@ const registerCandidate = async (req, res) => {
       faculty,
       buffer,
       registrationNumber,
+      'Active'
     ]);
 
-    res
-      .status(201)
-      .json({ message: "Successful registration", admissionNumber });
+    res.status(201).json({ message: "Successful registration" });
   } catch (error) {
     console.error("Candidate registration error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -344,11 +343,18 @@ const deleteCandidate = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found." });
     }
 
-    // Delete candidate
-    const deleteQuery = "DELETE FROM candidates WHERE candidate_id = $1";
-    await client.query(deleteQuery, [candidateId]);
+    // Step 1: Delete related votes
+    const deleteVotesQuery = "DELETE FROM votes WHERE candidate_id = $1";
+    await client.query(deleteVotesQuery, [candidateId]);
 
-    return res.status(200).json({ message: "Candidate deleted successfully." });
+    // Step 2: Delete candidate
+    const deleteCandidateQuery =
+      "DELETE FROM candidates WHERE candidate_id = $1";
+    await client.query(deleteCandidateQuery, [candidateId]);
+
+    return res
+      .status(200)
+      .json({ message: "Candidate and related votes deleted successfully." });
   } catch (error) {
     console.error("Error deleting candidate:", error);
     return res.status(500).json({ message: "Internal server error." });

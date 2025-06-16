@@ -12,6 +12,7 @@ function CandidateRegister() {
     firstName: "",
     lastName: "",
     email: "",
+    registrationNumber: "",
     biometricData: "",
     faculty: "",
   });
@@ -62,11 +63,10 @@ function CandidateRegister() {
     setError("");
     setIsScanning(true);
     setCapturedImage(null);
-    console.log("[Scan] Starting face scan...");
 
     if (!modelsLoaded) {
       setIsScanning(false);
-      console.log("[Scan] Models not loaded yet");
+
       return toast.info("Face recognition models are loading...");
     }
 
@@ -76,10 +76,8 @@ function CandidateRegister() {
       });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
-      console.log("[Scan] Webcam stream started");
 
       videoRef.current.onloadedmetadata = async () => {
-        console.log("[Scan] Video metadata loaded, waiting for 3 seconds");
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const canvas = canvasRef.current;
@@ -97,8 +95,6 @@ function CandidateRegister() {
           .withFaceLandmarks()
           .withFaceDescriptor();
 
-        console.log("[Scan] Face detection result:", detection);
-
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop());
           streamRef.current = null;
@@ -106,13 +102,12 @@ function CandidateRegister() {
         setIsScanning(false);
 
         if (!detection) {
-          console.log("[Scan] No face detected");
           setCapturedImage(null);
           return toast.info("No face detected. Please try again.");
         }
 
         const descriptorArray = Array.from(detection.descriptor);
-        console.log("[Scan] Descriptor array:", descriptorArray);
+
         setFormData((prev) => ({
           ...prev,
           biometricData: descriptorArray,
@@ -133,12 +128,12 @@ function CandidateRegister() {
   };
 
   const faculties = [
-    "Business & Economics",
-    "Engineering & Technology",
-    "Science & Technology",
-    "Computing & Information Technology",
-    "Social Sciences & Technology",
-    "Media & Communication",
+    "Business and Economics",
+    "Engineering and Technology",
+    "Science and Technology",
+    "Computing and Information Technology",
+    "Social Sciences and Technology",
+    "Media and Communication",
   ];
 
   useEffect(() => {
@@ -152,12 +147,7 @@ function CandidateRegister() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
-        {/* Left side - Image */}
-        {/* <div className="w-full lg:w-1/2 h-64 lg:h-screen bg-white">
-          <img src={HomeImage} alt="Home Image" className="w-400px h-400px " />
-        </div> */}
-
-        {/* Right side - Form */}
+        {/* Form */}
         <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
@@ -301,6 +291,26 @@ function CandidateRegister() {
                 <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
               )}
             </div>
+
+            <div>
+              <label className="block text-md font-medium text-gray-700">
+                Registration Number
+              </label>
+              <input
+                type="text"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleChange}
+                placeholder="e.g. CT123-4567/2023"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              {fieldErrors.registrationNumber && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.registrationNumber}
+                </p>
+              )}
+            </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Faculty

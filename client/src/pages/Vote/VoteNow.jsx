@@ -102,7 +102,6 @@ function VoteNow() {
         setCapturedImage(imageDataUrl);
         toast.success("Face scanning successful.");
 
-        // Show delegates list after successful scan
         setScanFaceModal(false);
         setDelegatesModal(true);
       };
@@ -162,7 +161,6 @@ function VoteNow() {
     }
   };
 
-  // Handle Logout
   const handleLogout = async () => {
     try {
       const response = await axios.post(
@@ -173,11 +171,7 @@ function VoteNow() {
 
       if (response.status === 200) {
         document.cookie = "userVotingSession=; Max-Age=0; path=/;";
-        // localStorage.removeItem("tenantId");
-
         toast.success("Successfully logged out.");
-
-        // Delay navigation by 2 seconds (long enough for toast to show)
         setTimeout(() => {
           navigate("/voter/login");
         }, 2000);
@@ -190,7 +184,6 @@ function VoteNow() {
     }
   };
 
-  //Fetch Voter status
   const getVoterStatus = async () => {
     try {
       const response = await axios.get(
@@ -213,19 +206,27 @@ function VoteNow() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      {/* Sidebar: Hidden on mobile, visible on md+ */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
       <div className="flex flex-col flex-1">
         <Navbar />
-        <div className="flex flex-1 items-center justify-center p-4">
+        <div className="flex flex-1 items-center justify-center p-4 sm:p-6">
           {loading ? (
-            <p>Loading delegates...</p>
+            <div className="text-center">
+              <Spinner />
+              <p className="mt-2 text-gray-600">Loading delegates...</p>
+            </div>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500 text-center text-sm sm:text-base">
+              {error}
+            </p>
           ) : hasVoted ? (
-            <div className="bg-white shadow-lg rounded-xl p-6 max-w-md text-center border border-green-200">
+            <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-sm sm:max-w-md text-center border border-green-200">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <svg
-                  className="w-16 h-16 text-green-500"
+                  className="w-12 h-12 sm:w-16 sm:h-16 text-green-500"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2}
@@ -237,28 +238,28 @@ function VoteNow() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <h2 className="text-2xl font-bold text-green-600">
+                <h2 className="text-xl sm:text-2xl font-bold text-green-600">
                   Vote Submitted!
                 </h2>
-                <p className="text-gray-700">
+                <p className="text-gray-700 text-sm sm:text-base">
                   Thank you for participating in the election.
                 </p>
                 <button
                   onClick={handleLogout}
-                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 cursor-pointer"
+                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm sm:text-base w-full sm:w-auto"
                 >
                   Logout
                 </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-8">
+            <div className="w-full max-w-xs sm:max-w-sm">
               <div
-                className="w-64 h-64 bg-white shadow-md rounded-xl flex flex-col items-center justify-center hover:shadow-lg transition cursor-pointer border border-gray-200"
+                className="bg-white shadow-md rounded-xl p-6 flex flex-col items-center justify-center hover:shadow-lg transition cursor-pointer border border-gray-200"
                 onClick={() => setScanFaceModal(true)}
               >
-                <Users size={48} className="text-blue-600 mb-4" />
-                <h2 className="text-xl font-semibold text-gray-800 text-center">
+                <Users size={32} className="text-blue-600 mb-4 sm:size-48" />
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 text-center">
                   Vote for Delegates
                 </h2>
               </div>
@@ -269,31 +270,29 @@ function VoteNow() {
 
       {/* Face Scan Modal */}
       {scanFaceModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg text-center">
-            <h2 className="text-xl font-bold mb-4">Face ID Verification</h2>
-
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-xs sm:max-w-lg text-center overflow-y-auto max-h-[90vh]">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">
+              Face ID Verification
+            </h2>
             {capturedImage && (
               <img
                 src={capturedImage}
                 alt="Captured"
-                className="mt-4 rounded border"
+                className="mt-4 rounded border w-full max-w-[300px] mx-auto"
               />
             )}
-
             <video
               ref={videoRef}
               autoPlay
               muted
               playsInline
-              className="w-full h-64 rounded-lg border border-gray-300"
+              className="w-full h-48 sm:h-64 rounded-lg border border-gray-300 mt-4"
             />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
-
-            {/* Flex container for buttons */}
-            <div className="mt-4 flex justify-center gap-4">
+            <canvas ref={canvasRef} className="hidden" />
+            <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
               <button
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
                 onClick={scanFace}
                 disabled={isScanning}
               >
@@ -302,10 +301,9 @@ function VoteNow() {
                 </span>
                 <ScanFace className="w-5 h-5" />
               </button>
-
               <button
                 onClick={() => setScanFaceModal(false)}
-                className="text-sm text-gray-600 border border-gray-300 px-4 py-2 rounded hover:bg-gray-100"
+                className="text-sm text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -316,46 +314,47 @@ function VoteNow() {
 
       {/* Delegates Modal */}
       {delegatesModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-3xl">
-            <h2 className="text-2xl font-bold mb-4 text-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-4 sm:p-6 rounded-xl w-full max-w-md sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg sm:text-2xl font-bold mb-4 text-center">
               Please select a candidate to vote for
             </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {delegates.length === 0 ? (
-                <p>No delegates available.</p>
+                <p className="text-center text-gray-600">
+                  No delegates available.
+                </p>
               ) : (
                 delegates.map((delegate) => (
                   <div
                     key={delegate.candidate_id}
-                    className={`border p-4 rounded shadow cursor-pointer ${
+                    className={`border p-4 rounded-lg cursor-pointer ${
                       selectedDelegateId === delegate.candidate_id
                         ? "border-green-600 bg-green-50"
-                        : "border-gray-400"
+                        : "border-gray-400 hover:bg-gray-50"
                     }`}
                     onClick={() => setSelectedDelegateId(delegate.candidate_id)}
                   >
-                    <p className="font-semibold">{delegate.full_name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-semibold text-sm sm:text-base">
+                      {delegate.full_name}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
                       {delegate.manifesto}
                     </p>
                   </div>
                 ))
               )}
             </div>
-
-            {/* Footer buttons */}
-            <div className="mt-6 flex justify-end gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
               <button
-                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm sm:text-base w-full sm:w-auto"
                 onClick={() => setDelegatesModal(false)}
               >
                 Close
               </button>
               <button
                 disabled={!selectedDelegateId || voting}
-                className={`px-4 py-2 rounded text-white flex items-center justify-center gap-2 cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-white flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto ${
                   selectedDelegateId && !voting
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-green-300 cursor-not-allowed"

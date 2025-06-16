@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
+import Spinner from "../../components/Spinner";
 import axios from "axios";
 import { endpoint } from "../../endpoint";
 import UserProfile from "../../assets/user.png";
@@ -152,8 +153,8 @@ function OfficialsApplications() {
             </div>
 
             {loading ? (
-              <div className="text-center text-gray-600 mt-6">
-                Loading applications...
+              <div className="flex items-center justify-center h-[500px]">
+                <Spinner size="large" />
               </div>
             ) : (
               <>

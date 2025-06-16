@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
+import Spinner from "../../components/Spinner";
 import { Users, Search, Filter, UserCheck, UserX } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../../endpoint";
@@ -181,12 +182,12 @@ function Voters() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="flex flex-1">
-        <div>
+      <div className="flex flex-1 flex-col md:flex-row">
+        <div className="hidden md:block">
           <AdminSidebar />
         </div>
 
-        <main className="w-full md:ml-64 p-4 sm:p-6">
+        <main className="flex-1 px-4 sm:px-6 py-4">
           <div className="max-w-7xl mx-auto w-full">
             <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
               <Users size={24} className="text-gray-500" />
@@ -196,6 +197,7 @@ function Voters() {
             {/* Search & Filters */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4 mb-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                {/* Search bar */}
                 <div className="flex items-center space-x-2 w-full md:w-1/2">
                   <Search size={20} className="text-gray-500" />
                   <input
@@ -206,7 +208,9 @@ function Voters() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-                <div className="flex flex-wrap gap-4">
+
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex items-center space-x-2">
                     <Filter size={16} className="text-gray-500" />
                     <select
@@ -236,6 +240,7 @@ function Voters() {
                 </div>
               </div>
 
+              {/* Sort */}
               <div className="mt-4 flex items-center space-x-2">
                 <Filter size={16} className="text-gray-500" />
                 <select
@@ -251,8 +256,8 @@ function Voters() {
 
             {/* Data Table */}
             {loading ? (
-              <div className="text-center mt-8 text-gray-500">
-                Loading voters...
+              <div className="flex items-center justify-center h-[500px]">
+                <Spinner size="large" />
               </div>
             ) : (
               <>

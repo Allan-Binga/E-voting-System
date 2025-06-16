@@ -166,7 +166,7 @@ function AdminLogin() {
           <p className="text-center text-sm text-gray-500 mt-4">
             Don't have an account?{" "}
             <Link
-              to="/officials/register"
+              to="/officials/registration"
               className="text-green-600 hover:underline font-medium"
             >
               Register here

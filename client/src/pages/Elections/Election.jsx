@@ -5,6 +5,7 @@ import { Vote, Plus, Filter, Edit, Trash, Info } from "lucide-react";
 import axios from "axios";
 import { endpoint } from "../../endpoint";
 import { toast } from "react-toastify";
+import Spinner from "../../components/Spinner";
 
 function Elections() {
   const [elections, setElections] = useState([]);
@@ -15,6 +16,8 @@ function Elections() {
   const [newElection, setNewElection] = useState({
     title: "",
     description: "",
+    delegatePositions: "",
+    executivePositions: "",
     startDate: "",
     endDate: "",
     status: "Upcoming",
@@ -24,7 +27,9 @@ function Elections() {
     description: "",
     startDate: "",
     endDate: "",
-    status: "Upcoming",
+    status: "",
+    delegates: "",
+    executives: "",
   });
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState("date");
@@ -49,11 +54,14 @@ function Elections() {
         withCredentials: true,
       });
       const electionsData = response.data.elections || [];
-      console.log("Elections Data:", electionsData); // Debug
+      console.log("Raw API Response:", electionsData);
       const normalized = electionsData.map((election) => ({
-        id: election.election_id || "", // Fallback if election_id is missing
+        id:
+          election.id || `fallback-${Math.random().toString(36).substr(2, 9)}`,
         title: election.title || "",
         description: election.description || "",
+        delegatePositions: election.delegates || "",
+        executivePositions: election.executives || "",
         startDate: formatDate(election.start_date),
         endDate: formatDate(election.end_date),
         status: election.status || "Upcoming",
@@ -78,13 +86,35 @@ function Elections() {
     )
     .sort((a, b) => {
       if (sortBy === "title") return a.title.localeCompare(b.title);
-      return new Date(b.startDate) - new Date(a.startDate); // Newest first
+      return new Date(b.startDate) - new Date(a.startDate);
     });
 
   // Handle form input changes for add modal
   const handleAddInputChange = (e) => {
     const { name, value } = e.target;
     setNewElection((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form input changes for edit modal
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Open Update Modal
+  const openUpdateModal = (election) => {
+    setSelectedElection(election);
+    setEditForm({
+      title: election.title,
+      description: election.description,
+      startDate: election.startDate,
+      endDate: election.endDate,
+      status: election.status,
+      delegates: election.delegatePositions,
+      executives: election.executivePositions,
+    });
+    setShowEditModal(true);
+    setShowDetailsModal(false); // Close details modal when opening edit modal
   };
 
   // Add Election
@@ -96,6 +126,8 @@ function Elections() {
         {
           title: newElection.title,
           description: newElection.description,
+          delegatePositions: newElection.delegatePositions,
+          executivePositions: newElection.executivePositions,
           startDate: newElection.startDate,
           endDate: newElection.endDate,
           status: newElection.status,
@@ -110,6 +142,8 @@ function Elections() {
           id: newElectionData.election_id,
           title: newElectionData.title,
           description: newElectionData.description,
+          delegatePositions: newElectionData.delegatePositions,
+          executivePositions: newElection.executivePositions,
           startDate: formatDate(newElectionData.start_date),
           endDate: formatDate(newElectionData.end_date),
           status: newElectionData.status,
@@ -120,6 +154,8 @@ function Elections() {
       setNewElection({
         title: "",
         description: "",
+        delegatePositions: "",
+        executivePositions: "",
         startDate: "",
         endDate: "",
         status: "Upcoming",
@@ -131,6 +167,88 @@ function Elections() {
         error.response?.data?.message || "Failed to create election."
       );
     }
+  };
+
+  // Update Election
+  const updateElection = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.patch(
+        `${endpoint}/election/update-election/${selectedElection.id}`,
+        {
+          title: editForm.title,
+          description: editForm.description,
+          start_date: editForm.startDate,
+          end_date: editForm.endDate,
+          status: editForm.status,
+          delegates: editForm.delegates,
+          executives: editForm.executives,
+        },
+        { withCredentials: true }
+      );
+
+      setElections((prev) =>
+        prev.map((election) =>
+          election.id === selectedElection.id
+            ? {
+                ...election,
+                title: editForm.title,
+                description: editForm.description,
+                startDate: editForm.startDate,
+                endDate: editForm.endDate,
+                status: editForm.status,
+                delegatePositions: editForm.delegates,
+                executivePositions: editForm.executives,
+              }
+            : election
+        )
+      );
+
+      setShowEditModal(false);
+      toast.success("Election updated successfully.");
+    } catch (error) {
+      console.error("Failed to update election:", error);
+      toast.error("Failed to update election. Please try again.");
+    }
+  };
+
+  // Delete Election
+  const deleteElection = async (electionId) => {
+    toast.info(({ closeToast }) => (
+      <div className="space-y-2">
+        <p>Are you sure you want to delete this election entry?</p>
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={async () => {
+              try {
+                await axios.delete(
+                  `${endpoint}/election/delete-election/${electionId}`,
+                  { withCredentials: true }
+                );
+                setElections((prev) =>
+                  prev.filter((election) => election.id !== electionId)
+                );
+                toast.dismiss();
+                toast.success("Entry deleted");
+              } catch (error) {
+                console.error("Failed to delete entry:", error);
+                toast.dismiss();
+                toast.error("Failed to delete entry. Please try again.");
+              }
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+          >
+            Yes, Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss()}
+            className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -193,8 +311,8 @@ function Elections() {
             </div>
 
             {loading ? (
-              <div className="text-center text-gray-600 mt-6">
-                Loading elections...
+              <div className="flex items-center justify-center h-[500px]">
+                <Spinner size="large" />
               </div>
             ) : (
               <>
@@ -231,19 +349,24 @@ function Elections() {
                         >
                           Status: {election.status}
                         </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Delegates: {election.delegatePositions || "N/A"}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Executives: {election.executivePositions || "N/A"}
+                        </p>
                       </div>
                       <div className="flex space-x-2 mt-4 md:mt-0">
                         <button
-                          onClick={() => openDetailsModal(election)}
-                          className="px-3 py-1 text-sm font-medium text-green-600 hover:text-green-800 flex items-center space-x-1"
+                          onClick={() => openUpdateModal(election)}
+                          className="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-1 cursor-pointer"
                         >
-                          <Info size={16} aria-hidden="true" />
-                          <span>Details</span>
+                          <Edit size={16} aria-hidden="true" />
+                          <span>Update</span>
                         </button>
-
                         <button
                           onClick={() => deleteElection(election.id)}
-                          className="px-3 py-1 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center space-x-1"
+                          className="px-3 py-1 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center space-x-1 cursor-pointer"
                         >
                           <Trash size={16} aria-hidden="true" />
                           <span>Delete</span>
@@ -301,6 +424,42 @@ function Elections() {
                     </div>
                     <div className="mb-4">
                       <label className="text-sm font-medium text-gray-600">
+                        Delegate Positions
+                      </label>
+                      <select
+                        name="delegatePositions"
+                        value={newElection.delegatePositions}
+                        onChange={handleAddInputChange}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select number</option>
+                        {[...Array(100).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>
+                            {num + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-gray-600">
+                        Executive Positions
+                      </label>
+                      <select
+                        name="executivePositions"
+                        value={newElection.executivePositions}
+                        onChange={handleAddInputChange}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select number</option>
+                        {[...Array(5).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>
+                            {num + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-gray-600">
                         Start Date <span className="text-red-600">*</span>
                       </label>
                       <input
@@ -343,7 +502,7 @@ function Elections() {
                     <div className="flex space-x-2">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors cursor-pointer"
                       >
                         Add Election
                       </button>
@@ -392,7 +551,7 @@ function Elections() {
                   </p>
                   <div className="flex justify-end space-x-2">
                     <button
-                      onClick={openEditModal}
+                      onClick={() => openUpdateModal(selectedElection)}
                       className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
                     >
                       Edit
@@ -451,6 +610,42 @@ function Elections() {
                         className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                         rows={3}
                       />
+                    </div>
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-gray-600">
+                        Delegate Positions
+                      </label>
+                      <select
+                        name="delegates"
+                        value={editForm.delegates}
+                        onChange={handleEditInputChange}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select number</option>
+                        {[...Array(100).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>
+                            {num + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-gray-600">
+                        Executive Positions
+                      </label>
+                      <select
+                        name="executives"
+                        value={editForm.executives}
+                        onChange={handleEditInputChange}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select number</option>
+                        {[...Array(5).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>
+                            {num + 1}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="mb-4">
                       <label className="text-sm font-medium text-gray-600">

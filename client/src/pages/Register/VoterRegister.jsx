@@ -134,12 +134,12 @@ function VoterRegister() {
   };
 
   const faculties = [
-    "Business & Economics",
-    "Engineering & Technology",
-    "Science & Technology",
-    "Computing & Information Technology",
-    "Social Sciences & Technology",
-    "Media & Communication",
+    "Business and Economics",
+    "Engineering and Technology",
+    "Science and Technology",
+    "Computing and Information Technology",
+    "Social Sciences and Technology",
+    "Media and Communication",
   ];
 
   const handleSubmit = async (e) => {
