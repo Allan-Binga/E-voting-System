@@ -91,9 +91,9 @@ const voteNow = async (req, res) => {
   }
 };
 
-//Vote as a candidate
+// Vote as a candidate
 const voteAsCandidate = async (req, res) => {
-  const voterId = req.candidateId; // This is the voting candidate's candidate_id
+  const voterId = req.candidateId;
   const { candidateId, voteType } = req.body;
 
   if (!candidateId || !voteType) {
@@ -121,15 +121,32 @@ const voteAsCandidate = async (req, res) => {
       return res.status(404).json({ message: "Voter not found." });
     }
 
-    // Check voting status for specific vote type
-    const voteStatusField =
-      voteType === "delegate"
-        ? "delegate_voting_status"
-        : "executive_voting_status";
-    if (result.rows[0][voteStatusField] === "Voted") {
-      return res
-        .status(403)
-        .json({ message: `User has already voted for ${voteType}.` });
+    const voter = result.rows[0];
+
+    if (voteType === "delegate") {
+      // Count existing delegate votes
+      const countDelegateVotesQuery = `
+        SELECT COUNT(*) 
+        FROM votes 
+        WHERE voter_candidate_id = $1 AND vote_type = 'delegate'
+      `;
+      const delegateVoteResult = await client.query(countDelegateVotesQuery, [
+        voterId,
+      ]);
+
+      const delegateVoteCount = parseInt(delegateVoteResult.rows[0].count, 10);
+      if (delegateVoteCount >= 4) {
+        return res.status(403).json({
+          message: "You can only vote for up to 4 delegates.",
+        });
+      }
+    } else {
+      // Check if already voted for executive
+      if (voter.executive_voting_status === "Voted") {
+        return res
+          .status(403)
+          .json({ message: "You have already voted for an executive." });
+      }
     }
 
     // Check if the candidate being voted for exists
@@ -145,15 +162,17 @@ const voteAsCandidate = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found." });
     }
 
-    // Update voting status
-    const updateVoteStatusQuery = `
-      UPDATE candidates 
-      SET ${voteStatusField} = 'Voted'
-      WHERE candidate_id = $1
-    `;
-    await client.query(updateVoteStatusQuery, [voterId]);
+    // Update voting status (only for executive vote)
+    if (voteType === "executive") {
+      const updateVoteStatusQuery = `
+        UPDATE candidates 
+        SET executive_voting_status = 'Voted'
+        WHERE candidate_id = $1
+      `;
+      await client.query(updateVoteStatusQuery, [voterId]);
+    }
 
-    // Record the vote with voter_candidate_id
+    // Record the vote
     const insertVoteQuery = `
       INSERT INTO votes (voter_candidate_id, candidate_id, vote_type, created_at)
       VALUES ($1, $2, $3, NOW())

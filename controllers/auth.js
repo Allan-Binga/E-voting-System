@@ -15,7 +15,7 @@ function euclideanDistance(arr1, arr2) {
   return Math.sqrt(sum);
 }
 
-//Register Voter
+// Register Voter
 const registerVoter = async (req, res) => {
   const {
     firstName,
@@ -39,7 +39,7 @@ const registerVoter = async (req, res) => {
 
   const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{4}$/; // e.g., CIT-831-2025
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{3}\/\d{4}$/; // Only CIT-123-123/2025 format
 
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
@@ -62,7 +62,7 @@ const registerVoter = async (req, res) => {
   if (!regNoRegex.test(registrationNumber)) {
     return res.status(400).json({
       message:
-        "Invalid registration number format. Use format: CODE-123-2025 (e.g., CIT-831-2025)",
+        "Invalid registration number format. Use format: CIT-123-123/2025",
     });
   }
 
@@ -80,10 +80,10 @@ const registerVoter = async (req, res) => {
     return res.status(400).json({ message: "Invalid faculty selection." });
   }
 
-  const regNoParts = registrationNumber.split("-");
-  if (regNoParts[0] !== facultyCode) {
+  const regPrefix = registrationNumber.split("/")[0].split("-")[0];
+  if (regPrefix !== facultyCode) {
     return res.status(400).json({
-      message: `Registration number prefix (${regNoParts[0]}) does not match selected faculty code (${facultyCode}).`,
+      message: `Registration number prefix (${regPrefix}) does not match selected faculty code (${facultyCode}).`,
     });
   }
 

@@ -31,7 +31,7 @@ const getCandidates = async (req, res) => {
   }
 };
 
-//Register Candidate
+// Register Candidate
 const registerCandidate = async (req, res) => {
   const {
     firstName,
@@ -55,7 +55,7 @@ const registerCandidate = async (req, res) => {
 
   const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{4}$/; // e.g., CIT-831-2025
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{3}\/\d{4}$/; // e.g., CIT-123-123/2025
 
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
@@ -63,6 +63,7 @@ const registerCandidate = async (req, res) => {
         "First name must be at least 3 characters and contain only valid characters.",
     });
   }
+
   if (!nameRegex.test(lastName)) {
     return res.status(400).json({
       message:
@@ -77,7 +78,7 @@ const registerCandidate = async (req, res) => {
   if (!regNoRegex.test(registrationNumber)) {
     return res.status(400).json({
       message:
-        "Invalid registration number format. Use format: CODE-123-2025 (e.g., CIT-831-2025)",
+        "Invalid registration number format. Use format: CIT-123-123/2025",
     });
   }
 
@@ -96,10 +97,10 @@ const registerCandidate = async (req, res) => {
     return res.status(400).json({ message: "Invalid faculty selection." });
   }
 
-  const regNoParts = registrationNumber.split("-");
-  if (regNoParts[0] !== facultyCode) {
+  const regPrefix = registrationNumber.split("/")[0].split("-")[0];
+  if (regPrefix !== facultyCode) {
     return res.status(400).json({
-      message: `Registration number prefix (${regNoParts[0]}) does not match selected faculty code (${facultyCode}).`,
+      message: `Registration number prefix (${regPrefix}) does not match selected faculty code (${facultyCode}).`,
     });
   }
 
@@ -114,9 +115,19 @@ const registerCandidate = async (req, res) => {
       });
     }
 
+    // Validate biometric data format
+    if (
+      !Array.isArray(biometricData) ||
+      biometricData.some((val) => typeof val !== "number")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Invalid biometric data format." });
+    }
+
     const buffer = Buffer.from(new Float32Array(biometricData).buffer);
 
-    // Insert candidate without admission number
+    // Insert candidate
     const insertCandidateQuery = `
       INSERT INTO candidates (first_name, last_name, email, faculty, biometric_data, registration_number, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -129,7 +140,7 @@ const registerCandidate = async (req, res) => {
       faculty,
       buffer,
       registrationNumber,
-      'Active'
+      "Active",
     ]);
 
     res.status(201).json({ message: "Successful registration" });
