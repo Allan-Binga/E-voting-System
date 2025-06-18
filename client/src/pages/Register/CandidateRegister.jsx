@@ -301,7 +301,7 @@ function CandidateRegister() {
                 name="registrationNumber"
                 value={formData.registrationNumber}
                 onChange={handleChange}
-                placeholder="e.g. CT123-4567/2023"
+                placeholder="e.g. CIT-123-456/2023"
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               {fieldErrors.registrationNumber && (
