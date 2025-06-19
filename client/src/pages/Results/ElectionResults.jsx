@@ -10,9 +10,9 @@ function ElectionResult() {
   const [winner, setWinner] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [electionId, setElectionId] = useState(1); 
+  const [electionId, setElectionId] = useState(1);
 
-  // API for fetching results
+  // Fetch election results
   const getResults = async () => {
     try {
       setLoading(true);
@@ -21,14 +21,29 @@ function ElectionResult() {
       });
       setResults(response.data.results);
       setWinner(response.data.winner);
-      setLoading(false);
     } catch (error) {
       setMessage("Failed to fetch results.");
+    } finally {
       setLoading(false);
     }
   };
 
-  // API for announcing winner
+  // Tally the results
+  const tallyResults = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${endpoint}/results/tally-results`);
+      setMessage(response.data.message);
+      await getResults(); // Refresh after tallying
+    } catch (error) {
+      const errMsg = error.response?.data?.error || "Failed to tally results.";
+      setMessage(errMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Announce the winner
   const announceWinner = async () => {
     try {
       setLoading(true);
@@ -37,11 +52,12 @@ function ElectionResult() {
       });
       setMessage(response.data.message);
       setWinner(response.data.winner);
-      setLoading(false);
+      await getResults(); // Refresh after announcing
     } catch (error) {
       const errMsg =
         error.response?.data?.message || "Failed to announce winner.";
       setMessage(errMsg);
+    } finally {
       setLoading(false);
     }
   };
@@ -51,7 +67,7 @@ function ElectionResult() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col pt-24 min-h-screen bg-gray-50">
       <Navbar />
 
       <div className="flex flex-1">
@@ -81,8 +97,16 @@ function ElectionResult() {
               </div>
             )}
 
-            {/* Announce Winner Button */}
-            <div className="mb-6">
+            {/* Action Buttons */}
+            <div className="mb-6 flex gap-4">
+              <button
+                onClick={tallyResults}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow"
+              >
+                {loading ? "Tallying..." : "Tally Results"}
+              </button>
+
               <button
                 onClick={announceWinner}
                 disabled={loading}

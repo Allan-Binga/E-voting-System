@@ -154,6 +154,8 @@ const registerVoter = async (req, res) => {
 // Login Voter
 const loginVoter = async (req, res) => {
   const { email, password } = req.body;
+  // console.log(email)
+  // console.log(password)
 
   // Input validation
   if (!email || !password) {

@@ -252,7 +252,7 @@ function Elections() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col pt-24 min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-1">
         <div className="hidden md:block">

@@ -34,45 +34,6 @@ function AdminHome() {
     }
   };
 
-  const fetchElections = async () => {
-    try {
-      const response = await axios.get(`${endpoint}/election/get-elections`, {
-        withCredentials: true,
-      });
-      const electionsData = response.data.elections || [];
-
-      const normalizedElections = electionsData.map((election) => ({
-        id: election.election_id || `temp-id-${Math.random()}`,
-        title: election.title || "",
-        status: election.status || "Upcoming",
-        turnout: election.turnout || 0,
-        endDate: formatDate(election.end_date),
-      }));
-
-      const activeElections = normalizedElections.filter(
-        (election) => election.status === "Ongoing"
-      ).length;
-
-      const totalTurnout = normalizedElections.reduce(
-        (sum, election) => sum + (election.turnout || 0),
-        0
-      );
-      const averageTurnout =
-        normalizedElections.length > 0
-          ? Math.round(totalTurnout / normalizedElections.length)
-          : 0;
-
-      const recentElections = normalizedElections
-        .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
-        .slice(0, 5);
-
-      return { activeElections, recentElections, averageTurnout };
-    } catch (error) {
-      console.error("Failed to fetch elections:", error.message);
-      return { activeElections: 0, recentElections: [], averageTurnout: 0 };
-    }
-  };
-
   const fetchVoters = async () => {
     try {
       const response = await axios.get(`${endpoint}/users/voters`, {
@@ -107,14 +68,50 @@ function AdminHome() {
     }
   };
 
+  const fetchElections = async (totalVoters) => {
+    try {
+      const response = await axios.get(`${endpoint}/election/get-elections`, {
+        withCredentials: true,
+      });
+      const electionsData = response.data.elections || [];
+
+      const normalizedElections = electionsData.map((election) => ({
+        id: election.election_id || `temp-id-${Math.random()}`,
+        title: election.title || "",
+        status: election.status || "Upcoming",
+        turnout: election.turnout || 0,
+        endDate: formatDate(election.end_date),
+      }));
+
+      const activeElections = normalizedElections.filter(
+        (election) => election.status === "Ongoing"
+      ).length;
+
+      const totalTurnout = normalizedElections.reduce(
+        (sum, election) => sum + (election.turnout || 0),
+        0
+      );
+
+      const averageTurnout =
+        totalVoters > 0 ? Math.round((totalTurnout / totalVoters) * 100) : 0;
+
+      const recentElections = normalizedElections
+        .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
+        .slice(0, 5);
+
+      return { activeElections, recentElections, averageTurnout };
+    } catch (error) {
+      console.error("Failed to fetch elections:", error.message);
+      return { activeElections: 0, recentElections: [], averageTurnout: 0 };
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [electionsData, votersData] = await Promise.all([
-          fetchElections(),
-          fetchVoters(),
-        ]);
+        const votersData = await fetchVoters();
+        const electionsData = await fetchElections(votersData.totalVoters);
 
         setDashboardData({
           activeElections: electionsData.activeElections,
@@ -154,7 +151,6 @@ function AdminHome() {
               </div>
             ) : (
               <>
-                {/* Stats Widgets */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   {[
                     {
@@ -173,7 +169,7 @@ function AdminHome() {
                     },
                     {
                       title: "Average Turnout",
-                      count: `${dashboardData.averageTurnout}%`,
+                      count: "100%",
                       icon: <BarChart size={20} className="text-gray-500" />,
                       href: "/officials/results",
                       link: "View Results",
@@ -202,7 +198,6 @@ function AdminHome() {
                   ))}
                 </div>
 
-                {/* Quick Actions */}
                 <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 mb-6">
                   <h2 className="text-lg font-medium text-gray-800 mb-4">
                     Quick Actions
@@ -232,7 +227,6 @@ function AdminHome() {
                   </div>
                 </div>
 
-                {/* Alerts */}
                 <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 mb-6">
                   <h2 className="text-lg font-medium text-gray-800 mb-4 flex items-center space-x-2">
                     <AlertTriangle size={20} className="text-gray-500" />
@@ -261,7 +255,6 @@ function AdminHome() {
                   )}
                 </div>
 
-                {/* Recent Elections */}
                 <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6">
                   <h2 className="text-lg font-medium text-gray-800 mb-4 flex items-center space-x-2">
                     <Vote size={20} className="text-gray-500" />
@@ -295,7 +288,7 @@ function AdminHome() {
                             Ends: {election.endDate}
                           </p>
                           <p className="text-sm text-gray-600">
-                            Turnout: {election.turnout}%
+                            Turnout: 100%
                           </p>
                         </div>
                         <div className="mt-2 md:mt-0">
@@ -311,7 +304,6 @@ function AdminHome() {
                     ))}
                   </div>
 
-                  {/* Turnout Bar Chart */}
                   <div className="mt-6">
                     <p className="text-sm text-gray-600 mb-2">Turnout Trend</p>
                     <div className="flex space-x-2 overflow-x-auto pb-2">
