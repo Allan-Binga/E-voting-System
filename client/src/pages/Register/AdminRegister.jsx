@@ -203,7 +203,7 @@ function AdminRegister() {
                 placeholder="••••••••"
                 className={`mt-1 block w-full border ${
                   fieldErrors.password ? "border-red-500" : "border-gray-300"
-                } rounded-full shadow-sm py-2.5 px-4 text-sm focus:outline-none focus:ring-2 ${
+                } rounded-lg shadow-sm py-2.5 px-4 text-sm focus:outline-none focus:ring-2 ${
                   fieldErrors.password
                     ? "focus:ring-red-500"
                     : "focus:ring-green-500"
@@ -225,7 +225,7 @@ function AdminRegister() {
             <div>
               <button
                 type="submit"
-                className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
+                className={`w-full py-3 text-white rounded-lg transition duration-200 cursor-pointer ${
                   loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
                 } flex items-center justify-center`}
                 disabled={loading}

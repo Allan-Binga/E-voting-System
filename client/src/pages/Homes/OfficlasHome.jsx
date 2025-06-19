@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import AdminSidebar from "../../components/AdminSidebar";
+import Spinner from "../../components/Spinner";
 import {
   LayoutDashboard,
   Vote,
@@ -135,7 +136,7 @@ function AdminHome() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex flex-1 pt-20 flex-col md:flex-row">
         <div className="hidden sm:block">
           <AdminSidebar />
         </div>
@@ -148,8 +149,8 @@ function AdminHome() {
             </h1>
 
             {loading ? (
-              <div className="text-center text-gray-600 mt-6">
-                Loading dashboard data...
+              <div className="flex items-center justify-center h-[500px]">
+                <Spinner size="medium" />
               </div>
             ) : (
               <>

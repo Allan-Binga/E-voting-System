@@ -4,17 +4,6 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { sendOTPEmail, sendWelcomeEmail } = require("./emailService");
 
-function euclideanDistance(arr1, arr2) {
-  if (arr1.length !== arr2.length) return Infinity;
-
-  let sum = 0;
-  for (let i = 0; i < arr1.length; i++) {
-    const diff = arr1[i] - arr2[i];
-    sum += diff * diff;
-  }
-  return Math.sqrt(sum);
-}
-
 // Register Voter
 const registerVoter = async (req, res) => {
   const {
@@ -24,6 +13,7 @@ const registerVoter = async (req, res) => {
     faculty,
     biometricData,
     registrationNumber,
+    password,
   } = req.body;
 
   if (
@@ -32,14 +22,15 @@ const registerVoter = async (req, res) => {
     !email ||
     !faculty ||
     !biometricData ||
-    !registrationNumber
+    !registrationNumber ||
+    !password
   ) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
   const nameRegex = /^[A-Za-z][A-Za-z'\-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{3}\/\d{4}$/; // Only CIT-123-123/2025 format
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{3}\/\d{4}$/;
 
   if (!nameRegex.test(firstName)) {
     return res.status(400).json({
@@ -63,6 +54,15 @@ const registerVoter = async (req, res) => {
     return res.status(400).json({
       message:
         "Invalid registration number format. Use format: CIT-123-123/2025",
+    });
+  }
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.",
     });
   }
 
@@ -109,10 +109,22 @@ const registerVoter = async (req, res) => {
     const newEmbedding = new Float32Array(biometricData);
     const buffer = Buffer.from(newEmbedding.buffer);
 
-    // Insert user
+    // 🔐 Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Insert user including hashed password
     const insertUserQuery = `
-      INSERT INTO users (first_name, last_name, email, faculty, biometric_data, registration_number, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO users (
+        first_name,
+        last_name,
+        email,
+        faculty,
+        biometric_data,
+        registration_number,
+        password,
+        status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING user_id
     `;
     const insertResult = await client.query(insertUserQuery, [
@@ -122,12 +134,12 @@ const registerVoter = async (req, res) => {
       faculty,
       buffer,
       registrationNumber,
+      hashedPassword,
       "Active",
     ]);
 
     const userId = insertResult.rows[0].user_id;
 
-    // Send welcome email
     await sendWelcomeEmail(firstName, lastName, email);
 
     res
@@ -141,12 +153,13 @@ const registerVoter = async (req, res) => {
 
 // Login Voter
 const loginVoter = async (req, res) => {
-  const { email, biometricData } = req.body;
+  const { email, password } = req.body;
 
-  if (!email || !biometricData) {
+  // Input validation
+  if (!email || !password) {
     return res
       .status(400)
-      .json({ message: "Email and biometric data are required." });
+      .json({ message: "Email and password are required." });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -155,7 +168,7 @@ const loginVoter = async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // Fetch user by email
     const getUserQuery = "SELECT * FROM users WHERE email = $1";
     const result = await client.query(getUserQuery, [email]);
 
@@ -165,27 +178,14 @@ const loginVoter = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Convert stored biometric data from buffer to Float32Array
-    const storedDescriptor = new Float32Array(
-      user.biometric_data.buffer,
-      user.biometric_data.byteOffset,
-      user.biometric_data.length / Float32Array.BYTES_PER_ELEMENT
-    );
+    // Compare password with hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    // Convert incoming descriptor to Float32Array
-    const incomingDescriptor = new Float32Array(biometricData);
-
-    // Compare using Euclidean distance
-    const distance = euclideanDistance(storedDescriptor, incomingDescriptor);
-    const THRESHOLD = 0.4; // You can fine-tune this threshold
-
-    if (distance > THRESHOLD) {
-      return res
-        .status(401)
-        .json({ message: "Biometric authentication failed." });
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // If match, generate JWT token
+    // Generate JWT token
     const token = jwt.sign(
       {
         id: user.user_id,
@@ -196,7 +196,7 @@ const loginVoter = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    //Set the cookie
+    // Set the cookie
     res.cookie("userVotingSession", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

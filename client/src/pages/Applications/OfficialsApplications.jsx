@@ -48,11 +48,8 @@ function OfficialsApplications() {
     getApplications();
   }, []);
 
-  // Approve Application
+  //Approve
   const approveApplication = async (candidateId) => {
-    if (!window.confirm("Are you sure you want to approve this application?"))
-      return;
-
     try {
       const response = await axios.put(
         `${endpoint}/applications/approve-application`,
@@ -76,11 +73,8 @@ function OfficialsApplications() {
     }
   };
 
-  // Reject Application
+  //Reject
   const rejectApplication = async (candidateId) => {
-    if (!window.confirm("Are you sure you want to reject this application?"))
-      return;
-
     try {
       const response = await axios.put(
         `${endpoint}/applications/reject-application`,
@@ -115,7 +109,7 @@ function OfficialsApplications() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 pt-20">
         {/* Sidebar - show only on medium and up */}
         <div className="hidden sm:block">
           <AdminSidebar />
@@ -154,7 +148,7 @@ function OfficialsApplications() {
 
             {loading ? (
               <div className="flex items-center justify-center h-[500px]">
-                <Spinner size="large" />
+                <Spinner size="medium" />
               </div>
             ) : (
               <>
@@ -215,15 +209,18 @@ function OfficialsApplications() {
                               <span>Approve</span>
                             </button>
                           )}
-                          {app.approvalStatus !== "Rejected" && (
-                            <button
-                              onClick={() => rejectApplication(app.candidateId)}
-                              className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center space-x-1"
-                            >
-                              <XCircle size={16} aria-hidden="true" />
-                              <span>Reject</span>
-                            </button>
-                          )}
+                          {app.approvalStatus !== "Rejected" &&
+                            app.approvalStatus !== "Approved" && (
+                              <button
+                                onClick={() =>
+                                  rejectApplication(app.candidateId)
+                                }
+                                className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center space-x-1"
+                              >
+                                <XCircle size={16} aria-hidden="true" />
+                                <span>Reject</span>
+                              </button>
+                            )}
                         </div>
                       </div>
                     </div>

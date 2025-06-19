@@ -1,7 +1,6 @@
-import { ScanFace } from "lucide-react";
+import { ScanFace, Eye, EyeOff } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
-import LoginImage from "../../assets/register.jpg"
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -16,7 +15,10 @@ function VoterRegister() {
     registrationNumber: "",
     biometricData: "",
     faculty: "",
+    password: "",
+    confirmPassword: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -24,6 +26,7 @@ function VoterRegister() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const videoRef = useRef();
   const streamRef = useRef(null);
@@ -198,7 +201,7 @@ function VoterRegister() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
+      <div className="flex flex-col pt-30 lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
         <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
@@ -299,6 +302,39 @@ function VoterRegister() {
                 </p>
               )}
             </div>
+            <div className="relative">
+              <label className="block text-md font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={(e) => {
+                  handleChange(e);
+                  setFieldErrors((prev) => ({ ...prev, password: "" })); // Clear error on input
+                }}
+                placeholder="••••••••"
+                className={`mt-1 block w-full border ${
+                  fieldErrors.password ? "border-red-500" : "border-gray-300"
+                } rounded-lg shadow-sm py-2.5 px-4 text-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.password
+                    ? "focus:ring-red-500"
+                    : "focus:ring-green-500"
+                }`}
+              />
+              <span
+                className="absolute right-3 top-10 text-gray-500 cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </span>
+              {fieldErrors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -383,7 +419,7 @@ function VoterRegister() {
 
             <button
               type="submit"
-              className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
+              className={`w-full py-2 text-white rounded-lg transition duration-200 cursor-pointer ${
                 loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
               } flex items-center justify-center`}
               disabled={loading}

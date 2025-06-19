@@ -146,7 +146,7 @@ function CandidateRegister() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
+      <div className="flex flex-col pt-30 lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
         {/* Form */}
         <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
@@ -396,7 +396,7 @@ function CandidateRegister() {
             <div>
               <button
                 type="submit"
-                className={`w-full py-3 text-white rounded-full transition duration-200 cursor-pointer ${
+                className={`w-full py-3 text-white rounded-lg transition duration-200 cursor-pointer ${
                   loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
                 } flex items-center justify-center`}
                 disabled={loading}
