@@ -16,7 +16,6 @@ function VoterRegister() {
     biometricData: "",
     faculty: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,9 +31,22 @@ function VoterRegister() {
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
 
+  // Password regex: At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  // Registration number regex: Format CIT-123-123/2025
+  const regNoRegex = /^CIT-\d{3}-\d{3}\/\d{4}$/;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Clear previous errors for the field
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+
+    // Update form data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Validation for firstName and lastName
     if (
       (name === "firstName" || name === "lastName") &&
       /[^a-zA-Z\s]/.test(value)
@@ -43,11 +55,30 @@ function VoterRegister() {
         ...prev,
         [name]: "Only valid names are allowed.",
       }));
-    } else {
-      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+      return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Password validation
+    if (name === "password" && value) {
+      if (!passwordRegex.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          password:
+            "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.",
+        }));
+      }
+    }
+
+    // Registration number validation
+    if (name === "registrationNumber" && value) {
+      if (!regNoRegex.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          registrationNumber:
+            "Invalid registration number format. Use format: CIT-123-123/2025",
+        }));
+      }
+    }
   };
 
   useEffect(() => {
@@ -152,14 +183,48 @@ function VoterRegister() {
     setLoading(true);
 
     const newErrors = {};
+
+    // First name validation
     if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
       newErrors.firstName = "First name must contain only letters.";
     }
+
+    // Last name validation
+    if (!/^[a-zA-Z]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = "Last name must contain only letters.";
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format.";
+    }
+
+    // Registration number validation
+    if (!formData.registrationNumber.trim()) {
+      newErrors.registrationNumber = "Registration number is required.";
+    } else if (!regNoRegex.test(formData.registrationNumber)) {
+      newErrors.registrationNumber =
+        "Invalid registration number format. Use format: CIT-123-123/2025";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required.";
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password =
+        "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.";
+    }
+
+    // Biometric data validation
     if (!formData.biometricData) {
       newErrors.biometricData = "Please scan your face before submitting.";
     }
-    if (!formData.registrationNumber.trim()) {
-      newErrors.registrationNumber = "Registration number is required.";
+
+    // Faculty validation
+    if (!formData.faculty) {
+      newErrors.faculty = "Please select a faculty.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -180,8 +245,18 @@ function VoterRegister() {
         setFieldErrors({});
         if (data.message?.toLowerCase().includes("first name")) {
           setFieldErrors({ firstName: data.message });
+        } else if (data.message?.toLowerCase().includes("last name")) {
+          setFieldErrors({ lastName: data.message });
+        } else if (data.message?.toLowerCase().includes("email")) {
+          setFieldErrors({ email: data.message });
+        } else if (data.message?.toLowerCase().includes("registration number")) {
+          setFieldErrors({ registrationNumber: data.message });
+        } else if (data.message?.toLowerCase().includes("password")) {
+          setFieldErrors({ password: data.message });
         } else if (data.message?.toLowerCase().includes("biometric")) {
           setFieldErrors({ biometricData: data.message });
+        } else if (data.message?.toLowerCase().includes("faculty")) {
+          setFieldErrors({ faculty: data.message });
         } else {
           toast.error(data.message || "Something went wrong.");
         }
@@ -302,6 +377,7 @@ function VoterRegister() {
                 </p>
               )}
             </div>
+
             <div className="relative">
               <label className="block text-md font-medium text-gray-700">
                 Password
@@ -312,7 +388,7 @@ function VoterRegister() {
                 value={formData.password}
                 onChange={(e) => {
                   handleChange(e);
-                  setFieldErrors((prev) => ({ ...prev, password: "" })); // Clear error on input
+                  setFieldErrors((prev) => ({ ...prev, password: "" }));
                 }}
                 placeholder="••••••••"
                 className={`mt-1 block w-full border ${

@@ -1,4 +1,4 @@
-import { Fingerprint, ScanFace } from "lucide-react";
+import { Fingerprint, ScanFace, Eye, EyeOff } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Spinner from "../../components/Spinner";
 import { useState, useEffect, useRef } from "react";
@@ -15,6 +15,7 @@ function CandidateRegister() {
     registrationNumber: "",
     biometricData: "",
     faculty: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,14 +24,28 @@ function CandidateRegister() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const videoRef = useRef();
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
 
+  // Password regex: At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  // Registration number regex: Format CIT-123-123/2025
+  const regNoRegex = /^CIT-\d{3}-\d{3}\/\d{4}$/;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Clear previous errors for the field
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+
+    // Update form data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Validation for firstName and lastName
     if (
       (name === "firstName" || name === "lastName") &&
       /[^a-zA-Z\s]/.test(value)
@@ -39,11 +54,30 @@ function CandidateRegister() {
         ...prev,
         [name]: "Only valid names are allowed.",
       }));
-    } else {
-      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+      return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Password validation
+    if (name === "password" && value) {
+      if (!passwordRegex.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          password:
+            "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.",
+        }));
+      }
+    }
+
+    // Registration number validation
+    if (name === "registrationNumber" && value) {
+      if (!regNoRegex.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          registrationNumber:
+            "Invalid registration number format. Use format: CIT-123-123/2025",
+        }));
+      }
+    }
   };
 
   useEffect(() => {
@@ -59,6 +93,14 @@ function CandidateRegister() {
     loadModels();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
   const scanFace = async () => {
     setError("");
     setIsScanning(true);
@@ -66,7 +108,6 @@ function CandidateRegister() {
 
     if (!modelsLoaded) {
       setIsScanning(false);
-
       return toast.info("Face recognition models are loading...");
     }
 
@@ -107,7 +148,6 @@ function CandidateRegister() {
         }
 
         const descriptorArray = Array.from(detection.descriptor);
-
         setFormData((prev) => ({
           ...prev,
           biometricData: descriptorArray,
@@ -136,18 +176,112 @@ function CandidateRegister() {
     "Media and Communication",
   ];
 
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    console.log("[Form] Submitting form data:", formData);
+
+    const newErrors = {};
+
+    // First name validation
+    if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = "First name must contain only letters.";
+    }
+
+    // Last name validation
+    if (!/^[a-zA-Z]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = "Last name must contain only letters.";
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format.";
+    }
+
+    // Registration number validation
+    if (!formData.registrationNumber.trim()) {
+      newErrors.registrationNumber = "Registration number is required.";
+    } else if (!regNoRegex.test(formData.registrationNumber)) {
+      newErrors.registrationNumber =
+        "Invalid registration number format. Use format: CIT-123-123/2025";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required.";
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password =
+        "Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.";
+    }
+
+    // Biometric data validation
+    if (!formData.biometricData) {
+      newErrors.biometricData = "Please scan your face before submitting.";
+    }
+
+    // Faculty validation
+    if (!formData.faculty) {
+      newErrors.faculty = "Please select a faculty.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      console.log("[Form] Validation errors:", newErrors);
+      setFieldErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${endpoint}/candidates/auth/register-candidate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      console.log("[Form] Server response:", data);
+
+      if (!res.ok) {
+        setFieldErrors({});
+        if (data.message?.toLowerCase().includes("first name")) {
+          setFieldErrors({ firstName: data.message });
+        } else if (data.message?.toLowerCase().includes("last name")) {
+          setFieldErrors({ lastName: data.message });
+        } else if (data.message?.toLowerCase().includes("email")) {
+          setFieldErrors({ email: data.message });
+        } else if (data.message?.toLowerCase().includes("registration number")) {
+          setFieldErrors({ registrationNumber: data.message });
+        } else if (data.message?.toLowerCase().includes("password")) {
+          setFieldErrors({ password: data.message });
+        } else if (data.message?.toLowerCase().includes("biometric")) {
+          setFieldErrors({ biometricData: data.message });
+        } else if (data.message?.toLowerCase().includes("faculty")) {
+          setFieldErrors({ faculty: data.message });
+        } else {
+          toast.error(data.message || "Something went wrong.");
+        }
+        return;
       }
-    };
-  }, []);
+
+      setFieldErrors({});
+      toast.success(data.message);
+      setTimeout(() => navigate("/candidate/login"), 4000);
+    } catch (error) {
+      console.error("[Form Error]", error);
+      toast.error("Server error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-col pt-30 lg:flex-row items-center justify-center min-h-screen px-6 lg:px-10 gap-6">
-        {/* Form */}
         <div className="w-full lg:w-1/2 max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
@@ -172,69 +306,7 @@ function CandidateRegister() {
             <p className="text-green-600 text-sm text-center mt-4">{success}</p>
           )}
 
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setError("");
-              setSuccess("");
-              setLoading(true);
-              console.log("[Form] Submitting form data:", formData);
-
-              const newErrors = {};
-              if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
-                newErrors.firstName = "First name must contain only letters.";
-              }
-              if (!formData.biometricData) {
-                newErrors.biometricData =
-                  "Please scan your face before submitting.";
-              }
-
-              if (Object.keys(newErrors).length > 0) {
-                console.log("[Form] Validation errors:", newErrors);
-                setFieldErrors(newErrors);
-                setLoading(false);
-                return;
-              }
-
-              try {
-                const res = await fetch(
-                  `${endpoint}/candidates/auth/register-candidate`,
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
-                  }
-                );
-
-                const data = await res.json();
-                console.log("[Form] Server response:", data);
-
-                if (!res.ok) {
-                  setFieldErrors({});
-                  if (data.message?.toLowerCase().includes("first name")) {
-                    setFieldErrors({ firstName: data.message });
-                  } else if (
-                    data.message?.toLowerCase().includes("biometric")
-                  ) {
-                    setFieldErrors({ biometricData: data.message });
-                  } else {
-                    toast.error(data.message || "Something went wrong.");
-                  }
-                  return;
-                }
-
-                setFieldErrors({});
-                toast.success(data.message);
-                setTimeout(() => navigate("/candidate/login"), 4000);
-              } catch (error) {
-                console.error("[Form Error]", error);
-                toast.error("Server error. Please try again.");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            className="mt-6 space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700">
@@ -310,7 +382,37 @@ function CandidateRegister() {
                 </p>
               )}
             </div>
-            
+
+            <div className="relative">
+              <label className="block text-md font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={(e) => {
+                  handleChange(e);
+                  setFieldErrors((prev) => ({ ...prev, password: "" }));
+                }}
+                placeholder="••••••••"
+                className={`mt-1 block w-full border ${
+                  fieldErrors.password ? "border-red-500" : "border-gray-300"
+                } rounded-lg shadow-sm py-2.5 px-4 text-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.password ? "focus:ring-red-500" : "focus:ring-green-500"
+                }`}
+              />
+              <span
+                className="absolute right-3 top-10 text-gray-500 cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </span>
+              {fieldErrors.password && (
+                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Faculty
@@ -331,9 +433,7 @@ function CandidateRegister() {
                 ))}
               </select>
               {fieldErrors.faculty && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors.faculty}
-                </p>
+                <p className="text-red-500 text-xs mt-1">{fieldErrors.faculty}</p>
               )}
             </div>
 
@@ -384,9 +484,7 @@ function CandidateRegister() {
                 {capturedImage ? "Rescan Face" : "Scan Face"}
               </button>
               {fieldErrors.biometricData && (
-                <p className="text-red-500 text-xs mt-2">
-                  {fieldErrors.biometricData}
-                </p>
+                <p className="text-red-500 text-xs mt-2">{fieldErrors.biometricData}</p>
               )}
               <p className="mt-2 text-sm text-gray-500">
                 Facial scan required for final registration
