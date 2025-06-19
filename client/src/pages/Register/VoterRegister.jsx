@@ -35,7 +35,7 @@ function VoterRegister() {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   // Registration number regex: Format CIT-123-123/2025
-  const regNoRegex = /^CIT-\d{3}-\d{3}\/\d{4}$/;
+  const regNoRegex = /^[A-Z]{3}-\d{3}-\d{3}\/\d{4}$/
 
   const handleChange = (e) => {
     const { name, value } = e.target;
